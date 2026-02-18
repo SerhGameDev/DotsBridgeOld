@@ -8,16 +8,14 @@ using UnityEngine;
 
 namespace DotsBridge.Timeline
 {
-    // Строитель, который работает с группой
     public struct RelativeGroupBuilder
     {
         private EntityManager _manager;
         private NativeArray<Entity> _entities;
 
-        // Шаблон анимации (Recipe)
         private NativeList<RelativeMoveClip> _recipe;
         private float _cursorTime;
-        private float3 _virtualOffset; // Накопительное смещение
+        private float3 _virtualOffset; 
 
         public RelativeGroupBuilder(EntityManager manager, NativeArray<Entity> entities, Allocator allocator)
         {
@@ -27,8 +25,6 @@ namespace DotsBridge.Timeline
             _cursorTime = 0;
             _virtualOffset = float3.zero;
         }
-
-        // --- API КОМАНД ---
 
         public RelativeGroupBuilder Move(Vector3 offsetDirection, float duration, Ease ease = Ease.OutQuad)
         {
@@ -55,8 +51,6 @@ namespace DotsBridge.Timeline
             return this;
         }
 
-        // --- СБОРКА ---
-
         public void Build()
         {
             if (_entities.Length == 0)
@@ -65,28 +59,22 @@ namespace DotsBridge.Timeline
                 return;
             }
 
-            // 1. Пакетное добавление компонентов (Batch Add) - Супер быстро
             _manager.AddComponent<TimelineState>(_entities);
             _manager.AddComponent<RelativeMoveClip>(_entities);
             _manager.AddComponent<SequenceOrigin>(_entities);
-            _manager.AddComponent<LocalTransform>(_entities); // Гарантируем наличие трансформа
+            _manager.AddComponent<LocalTransform>(_entities);
 
-            // 2. Данные по умолчанию (State & Origin Reset)
             var resetState = new TimelineState { CurrentTime = 0, CurrentClipIndex = 0, PlaybackSpeed = 1, IsPlaying = true };
             var resetOrigin = new SequenceOrigin { IsCaptured = false, Value = float3.zero };
 
-            // 3. Копирование данных (Loop)
-            // Для тысяч объектов это все равно < 1 мс, так как копируем struct и память
             for (int i = 0; i < _entities.Length; i++)
             {
                 Entity e = _entities[i];
 
-                // Сброс состояния
                 _manager.SetComponentData(e, resetState);
                 _manager.SetComponentData(e, resetOrigin);
                 _manager.SetComponentEnabled<TimelineState>(e, true);
 
-                // Копирование рецепта в буфер
                 DynamicBuffer<RelativeMoveClip> buffer = _manager.GetBuffer<RelativeMoveClip>(e);
                 buffer.Clear();
                 buffer.CopyFrom(_recipe);

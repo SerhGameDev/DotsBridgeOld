@@ -79,13 +79,11 @@ namespace DotsBridge
 
             if (query.IsEmptyIgnoreFilter)
             {
-                // Синглтона нет -> Создаем его
                 var entity = Manager.CreateEntity(typeof(T));
                 Manager.SetComponentData(entity, data);
             }
             else
             {
-                // Синглтон есть -> Обновляем
                 query.SetSingleton(data);
             }
         }

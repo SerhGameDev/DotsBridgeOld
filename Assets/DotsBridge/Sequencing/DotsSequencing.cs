@@ -29,9 +29,6 @@ namespace DotsBridge
         {
             var arr = new NativeArray<Entity>(1, Allocator.Temp);
             arr[0] = entity;
-            // Builder сам освободит Allocator.Temp массив не надо, 
-            // но так как Builder struct, лучше массив освободить снаружи или использовать List
-            // Для простоты API вернем Builder, но массив "утечет" до конца кадра (Temp allocator), это норм.
             return new RelativeGroupBuilder(Manager, arr, Allocator.Temp);
         }
     }

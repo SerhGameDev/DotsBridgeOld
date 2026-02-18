@@ -9,7 +9,6 @@ namespace DotsBridge.Spawning
     {
         private EntityManager _manager;
 
-        // Конфиг
         private Entity _prefab;
         private int _count;
         private float3 _position;
@@ -18,11 +17,9 @@ namespace DotsBridge.Spawning
         private bool _overrideScale;
         private int _id;
 
-        // Тайминг
         private int _batchSize;
         private float _interval;
 
-        // Циклы
         private int _loops;
         private bool _isPaused;
 
@@ -41,17 +38,15 @@ namespace DotsBridge.Spawning
             _batchSize = int.MaxValue;
             _interval = 0f;
 
-            _loops = 1; // По умолчанию 1 проход
+            _loops = 1; 
             _isPaused = false;
         }
-
-        // ... SetPrefab, SetCount, SetPosition, SetRotation, SetScale, SetID (без изменений) ...
 
         public SpawnerBuilder SetPrefab(Entity prefab) { _prefab = prefab; return this; }
         public SpawnerBuilder SetCount(int count) { _count = count; return this; }
         public SpawnerBuilder SetPosition(Vector3 position) { _position = position; return this; }
         public SpawnerBuilder SetRotation(Quaternion rotation) { _rotation = rotation; return this; }
-        public SpawnerBuilder SetID(string id) { _id = Dots.GetHash(id); return this; } // Предполагаем, что Dots.GetHash у вас есть
+        public SpawnerBuilder SetID(string id) { _id = Dots.GetHash(id); return this; } 
 
         public SpawnerBuilder SetScale(float scale)
         {
@@ -59,8 +54,6 @@ namespace DotsBridge.Spawning
             _overrideScale = true;
             return this;
         }
-
-        // --- НОВЫЕ МЕТОДЫ ---
 
         /// <summary>
         /// Спаунить порциями через интервал.
@@ -118,7 +111,7 @@ namespace DotsBridge.Spawning
             {
                 Prefab = _prefab,
                 CountRemaining = _count,
-                OriginalCount = _count, // Запоминаем для цикла
+                OriginalCount = _count,
                 Position = _position,
                 Rotation = _rotation,
                 Scale = _scale,

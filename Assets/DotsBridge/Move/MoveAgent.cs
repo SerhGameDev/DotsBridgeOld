@@ -3,12 +3,11 @@ using Unity.Mathematics;
 
 namespace DotsBridge
 {
-    // Основные параметры агента (скорость)
     public struct MoveAgent : IComponentData
     {
         public float Speed;
-        public float RotationSpeed; // Радианы в секунду (напр. 10)
-        public float StoppingDistance; // Дистанция остановки (для MoveTo)
+        public float RotationSpeed; 
+        public float StoppingDistance; 
     }
 
 
@@ -20,7 +19,7 @@ namespace DotsBridge
     public struct MoveSpeed : IComponentData { public float Value; }
 
     // Скорость вращения
-    public struct RotationSpeed : IComponentData { public float Value; } // Радианы/сек
+    public struct RotationSpeed : IComponentData { public float Value; } 
 
     // Дистанция остановки (для движения к цели)
     public struct StopDistance : IComponentData { public float Value; }

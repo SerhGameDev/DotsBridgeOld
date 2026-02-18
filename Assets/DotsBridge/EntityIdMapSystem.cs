@@ -51,18 +51,14 @@ namespace DotsBridge
                 MapWriter = mapRef.Map.AsParallelWriter()
             };
 
-            // Запускаем Job и получаем Handle
             JobHandle handle = job.ScheduleParallel(_query, state.Dependency);
 
-            // Сохраняем Handle в систему...
             state.Dependency = handle;
 
-            // ...И передаем его в наш статический класс!
             Dots.MapDependency = handle;
         }
     }
 
-    // RebuildMapJob тот же самый...
     [BurstCompile]
     public partial struct RebuildMapJob : IJobEntity
     {

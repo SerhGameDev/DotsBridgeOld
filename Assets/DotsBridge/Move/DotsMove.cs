@@ -19,19 +19,13 @@ namespace DotsBridge
         {
             if (entities.Length == 0) return;
 
-            // 1. Подготовка данных (Batch)
             PrepareMoveDataBatch(entities, speed, rotate);
 
-            // 2. Удаляем конфликтные компоненты (если есть)
-            // RemoveComponent<T>(NativeArray) - это быстро
             Manager.RemoveComponent<MoveDirection>(entities);
 
-            // 3. Устанавливаем цель (Batch)
-            // Сначала добавляем компонент всем, у кого его нет
             Manager.AddComponent<MoveTarget>(entities);
             Manager.AddComponent<StopDistance>(entities);
 
-            // Теперь проставляем значения (Parallel было бы быстрее, но здесь MainThread)
             var target = new MoveTarget { Value = destination };
             var stopDist = new StopDistance { Value = 0.1f };
 
@@ -40,12 +34,10 @@ namespace DotsBridge
                 Manager.SetComponentData(entities[i], target);
                 Manager.SetComponentData(entities[i], stopDist);
 
-                // Включаем движок для каждой
                 EnableMovementEngine(entities[i]);
             }
         }
 
-        // Перегрузка для List
         public static void MoveTo(NativeList<Entity> entities, Vector3 destination, float speed = 5f, bool rotate = true)
         {
             MoveTo(entities.AsArray(), destination, speed, rotate);
@@ -75,7 +67,6 @@ namespace DotsBridge
             }
         }
 
-        // Перегрузка для List
         public static void MoveDir(NativeList<Entity> entities, Vector3 direction, float speed = 5f, bool rotate = true)
         {
             MoveDir(entities.AsArray(), direction, speed, rotate);
@@ -111,11 +102,9 @@ namespace DotsBridge
             Stop(entities.AsArray());
         }
 
-        // --- Внутренние методы для Batch операций ---
 
         private static void PrepareMoveDataBatch(NativeArray<Entity> entities, float speed, bool rotate)
         {
-            // Пакетное добавление компонентов (очень быстро)
             Manager.AddComponent<MoveSpeed>(entities);
 
             var speedData = new MoveSpeed { Value = speed };
@@ -123,7 +112,7 @@ namespace DotsBridge
             if (rotate)
             {
                 Manager.AddComponent<RotationSpeed>(entities);
-                Manager.AddComponent<RotateToMovementTag>(entities); // Добавляем тег
+                Manager.AddComponent<RotateToMovementTag>(entities); 
 
                 var rotSpeed = new RotationSpeed { Value = 10f };
 
@@ -139,7 +128,6 @@ namespace DotsBridge
                 for (int i = 0; i < entities.Length; i++)
                 {
                     Manager.SetComponentData(entities[i], speedData);
-                    // Выключаем вращение, если компонент есть
                     if (Manager.HasComponent<RotateToMovementTag>(entities[i]))
                         Manager.SetComponentEnabled<RotateToMovementTag>(entities[i], false);
                 }

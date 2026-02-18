@@ -35,7 +35,6 @@ public partial struct RotationTimelineSystem : ISystem
             Entity entity,
             [ChunkIndexInQuery] int chunkIndex)
         {
-            // 1. Захват
             if (!origin.IsCaptured)
             {
                 origin.Value = transform.Rotation;

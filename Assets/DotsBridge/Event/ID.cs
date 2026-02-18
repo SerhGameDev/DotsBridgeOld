@@ -16,11 +16,11 @@ namespace DotsBridge
     public struct SpawnParams
     {
         public Entity Prefab;
-        public string GroupID;      // Строковый ID (например "EnemyWave1")
-        public Vector3 Position;    // Начальная позиция
-        public Quaternion Rotation; // Начальный поворот
-        public Vector3 Scale;       // Начальный масштаб (обычно 1,1,1)
-        public int Count;           // Сколько штук создать
+        public string GroupID;    
+        public Vector3 Position; 
+        public Quaternion Rotation; 
+        public Vector3 Scale; 
+        public int Count;  
 
         public static SpawnParams Default => new SpawnParams
         {

@@ -27,29 +27,22 @@ namespace DotsBridge
                 float3 toDest = destPos - currentPos;
                 float dist = math.length(toDest);
 
-                // Дошли?
                 if (dist <= agent.ValueRO.StoppingDistance)
                 {
-                    // Остановка
                     velocity.ValueRW.Linear = float3.zero;
                     velocity.ValueRW.Angular = float3.zero;
 
-                    // Выключаем тег движения (оптимизация: система перестанет обрабатывать этого юнита)
                     state.EntityManager.SetComponentEnabled<IsMovingTag>(entity, false);
                     continue;
                 }
 
                 float3 dir = math.normalize(toDest);
 
-                // Двигаем (через физику)
                 velocity.ValueRW.Linear = dir * agent.ValueRO.Speed;
 
-                // Поворачиваем
                 ApplyRotation(ref transform.ValueRW, dir, agent.ValueRO.RotationSpeed, dt);
             }
 
-            // 2. Обработка движения ПО НАПРАВЛЕНИЮ (MoveDirection)
-            // Здесь мы используем Optional RW для PhysicsVelocity, чтобы поддерживать и объекты БЕЗ физики
             foreach (var (transform, agent, direction, entity) in
                      SystemAPI.Query<RefRW<LocalTransform>, RefRO<MoveAgent>, RefRO<MoveDirection>>()
                      .WithAll<IsMovingTag>()
@@ -57,7 +50,6 @@ namespace DotsBridge
             {
                 float3 dir = direction.ValueRO.Value;
 
-                // Если вектор нулевой — стоим
                 if (math.lengthsq(dir) < 0.001f)
                 {
                     if (SystemAPI.HasComponent<PhysicsVelocity>(entity))
@@ -69,23 +61,19 @@ namespace DotsBridge
                     continue;
                 }
 
-                // Логика для ФИЗИКИ
                 if (SystemAPI.HasComponent<PhysicsVelocity>(entity))
                 {
                     var vel = SystemAPI.GetComponentRW<PhysicsVelocity>(entity);
-                    // Сохраняем Y (гравитацию), меняем только X/Z
                     float currentY = vel.ValueRO.Linear.y;
                     float3 moveVel = dir * agent.ValueRO.Speed;
                     moveVel.y = currentY;
                     vel.ValueRW.Linear = moveVel;
                 }
-                // Логика для ТРАНСФОРМА (без физики)
                 else
                 {
                     transform.ValueRW.Position += dir * agent.ValueRO.Speed * dt;
                 }
 
-                // Поворот
                 ApplyRotation(ref transform.ValueRW, dir, agent.ValueRO.RotationSpeed, dt);
             }
         }
