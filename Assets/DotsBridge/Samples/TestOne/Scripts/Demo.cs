@@ -1,65 +1,51 @@
 ﻿using DotsBridge;
 using DotsBridge.Modules.Movement;
+using DotsBridge.Modules.Network;
 using System.Collections;
 using Unity.Mathematics;
 using UnityEngine;
 
-public class InputContext
-{
-    public float3 CurrentDirection;
-}
-
 public class Demo : MonoBehaviour
 {
-    [SerializeField] private int Count = 10000;
+    [SerializeField] private int Count = 10;
 
-    private bool _isStart;
-
-    private InputContext _inputContext = new InputContext();
-
+    private bool _isServerStart;
     private DotsCommand _moveCommand;
 
-    private void Start()
+    private void OnEnable()
     {
-        StartCoroutine(Corutine());
+        // Теперь подписываемся на старт СЕРВЕРА
+        DotsNetworkManager.OnServerStarted += OnServerSuccess;
     }
 
-    public IEnumerator Corutine()
+    private void OnDisable()
+    {
+        DotsNetworkManager.OnServerStarted -= OnServerSuccess;
+    }
+
+    private void OnServerSuccess()
+    {
+        Debug.Log("<color=yellow>Сервер запущен! Начинаем спавн...</color>");
+        StartCoroutine(ServerSpawnCoroutine());
+    }
+
+    public IEnumerator ServerSpawnCoroutine()
     {
         yield return new WaitForSeconds(1);
 
-
+        // 1. СПАВНИМ ТОЛЬКО НА СЕРВЕРЕ
         EntityBridge
-            .BeginSpawn("Cub")
-            .SetCount(10)
+            .InServerWorld()
+            .BeginSpawn("Cub") // Имя твоего префаба
+            .SetCount(Count)
             .SetPosition(new Vector3(0, 5, 0))
             .Spawn("EnemyWave1")
             .SetData(new MoveTransformSpeed { Value = 5 })
-            .Do(batch => Debug.Log($"Волна появилась! Юнитов: {batch.Entities.Length}"))
-            .SetDestroyTimer(3)
+            .Do(batch => Debug.Log($"[Сервер] Волна появилась! Юнитов: {batch.Entities.Length}"))
             .Execute();
 
-        _moveCommand = EntityBridge.Command("MoveWave")
-            .GetById("EnemyWave1")
-            .Move(() => _inputContext.CurrentDirection);
 
-        yield return new WaitForSeconds(5);
-        EntityBridge.GetById("Cub")
-            .Move(new Vector3(0, 1, 0));
-        _isStart = true;
-    }
-
-    private void Update()
-    {
-        if (!_isStart)
-            return;
-
-        float3 currentInput = new float3(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"), 0);
-
-        if (!currentInput.Equals(_inputContext.CurrentDirection))
-        {
-            _inputContext.CurrentDirection = currentInput;
-            _moveCommand.Execute();
-        }
+        yield return new WaitForSeconds(1);
+        _isServerStart = true;
     }
 }

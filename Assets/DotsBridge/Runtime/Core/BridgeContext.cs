@@ -33,9 +33,39 @@ namespace DotsBridge
 
         public Entity GetPrefab(string name)
         {
-            // Берем буфер префабов из State текущего мира (логика из твоего старого EntityBridge.Prefabs.cs)
-            // ... 
-            return Entity.Null; // Замени на реальную логику поиска по _prefabBuffer внутри State
+            int hash = EntityBridge.GetHash(name);
+
+            // Если префабы еще не кэшированы для этого мира, ищем их
+            if (!State.IsPrefabBufferCached)
+            {
+                // Ищем сущность с буфером префабов (ее создает PrefabContainerAuthoring)
+                var query = State.Manager.CreateEntityQuery(typeof(PrefabRegistryElement));
+
+                if (!query.IsEmptyIgnoreFilter)
+                {
+                    // Читаем буфер
+                    var buffer = query.GetSingletonBuffer<PrefabRegistryElement>(true);
+                    for (int i = 0; i < buffer.Length; i++)
+                    {
+                        State.Prefabs[buffer[i].NameHash] = buffer[i].PrefabEntity;
+                    }
+                    State.IsPrefabBufferCached = true;
+                }
+                else
+                {
+                    UnityEngine.Debug.LogError($"[DotsBridge] В мире {State.World.Name} не найден контейнер префабов! Убедитесь, что объект с PrefabContainerAuthoring лежит в SubScene.");
+                    return Entity.Null;
+                }
+            }
+
+            // Выдаем префаб из кэша
+            if (State.Prefabs.TryGetValue(hash, out Entity prefab))
+            {
+                return prefab;
+            }
+
+            UnityEngine.Debug.LogError($"[DotsBridge] Префаб '{name}' не найден в реестре мира {State.World.Name}!");
+            return Entity.Null;
         }
 
         public EntityBatch GetById(string id)
@@ -99,7 +129,7 @@ namespace DotsBridge
         // Эти словари больше не static! Они живут внутри конкретного мира.
         public readonly Dictionary<int, EntityContainer> Containers = new Dictionary<int, EntityContainer>();
         public readonly Dictionary<string, ComponentType> TagRegistry = new Dictionary<string, ComponentType>();
-
+        public readonly Dictionary<int, Entity> Prefabs = new Dictionary<int, Entity>();
         // Буфер префабов тоже переезжает сюда
         public bool IsPrefabBufferCached = false;
 
@@ -116,7 +146,8 @@ namespace DotsBridge
                 container.Dispose();
             }
             Containers.Clear();
-            TagRegistry.Clear();
+            TagRegistry.Clear(); 
+            Prefabs.Clear(); // Очищаем префабы
         }
     }
 }

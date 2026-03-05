@@ -1,6 +1,6 @@
 {
   "name": "com.sershdev.dotsbridge",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "displayName": "DotsBridge",
   "description": "Высокопроизводительный мост между OOP и Unity DOTS для мобильных и ПК игр.",
   "unity": "2022.3",

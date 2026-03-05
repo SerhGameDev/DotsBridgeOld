@@ -1,3 +1,4 @@
 ﻿<Solution>
   <Project Path="DotsBridge.csproj" />
+  <Project Path="Assembly-CSharp.csproj" />
 </Solution>
