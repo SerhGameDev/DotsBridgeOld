@@ -1,0 +1,24 @@
+{
+  "name": "com.sershdev.dotsbridge",
+  "version": "0.1.0",
+  "displayName": "DotsBridge",
+  "description": "Высокопроизводительный мост между OOP и Unity DOTS для мобильных и ПК игр.",
+  "unity": "2022.3",
+  "unityRelease": "0f1",
+  "keywords": [
+    "dots",
+    "ecs",
+    "framework",
+    "bridge"
+  ],
+  "author": {
+    "name": "SershDev",
+    "email": "serh56436@gmail.com"
+  },
+  "dependencies": {
+    "com.unity.entities": "1.2.0",
+    "com.unity.burst": "1.8.11",
+    "com.unity.mathematics": "1.3.1",
+    "com.unity.transforms": "1.2.0"
+  }
+}

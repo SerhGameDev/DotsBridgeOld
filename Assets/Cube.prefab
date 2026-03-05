@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 2351121343938921749}
   - component: {fileID: 9035487943956002945}
   - component: {fileID: 1276711089804120054}
+  - component: {fileID: 7701800801291391889}
   m_Layer: 0
   m_Name: Cube
   m_TagString: Untagged
@@ -28,7 +29,7 @@ Transform:
   m_GameObject: {fileID: 8036202599347225915}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.5, y: 0.35, z: 0.5}
+  m_LocalPosition: {x: 0.5, y: 0.35, z: 1.574}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -112,3 +113,18 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &7701800801291391889
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8036202599347225915}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9dc51d598264506458b3c776616ed2b8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DotsBridge.Authoring.DotsEntityAuthoring
+  Id: Cub
+  MoveSpeed: 5
+  IsMovingInitially: 0
