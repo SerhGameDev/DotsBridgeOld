@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace DotsBridge
@@ -5,17 +6,18 @@ namespace DotsBridge
     public static partial class EntityBridge
     {
         /// <summary>
-        /// Помечает сущности на удаление (будут уничтожены в конце кадра системным сборщиком).
+        /// Помечает сущности на удаление.
         /// </summary>
-        public static EntityBatch Destroy(this EntityBatch batch)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static DotsCommand Destroy(this DotsCommand cmd)
         {
-            if (batch.Entities.IsCreated && batch.Entities.Length > 0)
+            return cmd.Do(batch =>
             {
-                // Быстро вешаем тег смерти на весь батч
-                batch.Manager.AddComponent<DestroyTag>(batch.Entities.AsArray());
-            }
-            return batch;
+                if (batch.Entities.IsCreated && batch.Entities.Length > 0)
+                {
+                    batch.Manager.AddComponent<DestroyTag>(batch.Entities.AsArray());
+                }
+            });
         }
-        public static DotsCommand Destroy(this DotsCommand cmd) => cmd.Do(b => b.Destroy());
     }
 }

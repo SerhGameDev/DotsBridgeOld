@@ -7,20 +7,45 @@ namespace DotsBridge
 {
     public static partial class EntityBridge
     {
-        public static EntityBatch Move(this EntityBatch batch, Vector3 position)
+        /// <summary>
+        /// Задает статичное направление движения (Vector3).
+        /// </summary>
+        public static DotsCommand Move(this DotsCommand cmd, Vector3 direction)
         {
-            batch.SetData(new MoveTransformDirection { Value = position });
-            return batch;
+            // Просто продолжаем цепочку команд!
+            return cmd.SetData(new MoveTransformDirection { Value = direction });
         }
 
-        public static DotsCommand Move(this DotsCommand сommand, Vector3 position)
+        /// <summary>
+        /// Задает статичное направление движения (float3 для DOTS).
+        /// </summary>
+        public static DotsCommand Move(this DotsCommand cmd, float3 direction)
         {
-            return сommand.Do(batch => batch.Move(position));
+            return cmd.SetData(new MoveTransformDirection { Value = direction });
         }
 
-        public static DotsCommand Move(this DotsCommand cmd, Func<float3> positionGetter)
+        /// <summary>
+        /// Задает динамическое направление (вычисляется каждый кадр при вызове Execute).
+        /// Идеально для WASD инпута в Top-Down шутерах!
+        /// </summary>
+        public static DotsCommand Move(this DotsCommand cmd, Func<float3> directionProvider)
         {
-            return cmd.Do(batch => batch.Move(positionGetter.Invoke()));
+            return cmd.Do(batch =>
+            {
+                if (batch.Entities.IsEmpty) return;
+
+                // Читаем инпут строго в момент выполнения команды
+                float3 dir = directionProvider.Invoke();
+                var em = batch.State.Manager;
+
+                foreach (var entity in batch.Entities)
+                {
+                    if (em.HasComponent<MoveTransformDirection>(entity))
+                    {
+                        em.SetComponentData(entity, new MoveTransformDirection { Value = dir });
+                    }
+                }
+            });
         }
     }
 }

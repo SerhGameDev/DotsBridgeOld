@@ -50,27 +50,30 @@ namespace DotsBridge
         public SpawnerBuilder SetPosition(Vector3 position) { _position = position; return this; }
         public SpawnerBuilder SetRotation(Quaternion rotation) { _rotation = rotation; return this; }
         public SpawnerBuilder SetScale(float scale) { _scale = scale; return this; }
-
         /// <summary>
-        /// Формирует DotsCommand, где TargetResolver — это логика инстанцирования.
+        /// Создает команду спавна. Опциональный 'id' автоматически зарегистрирует сущности в реактивной системе.
         /// </summary>
-        public DotsCommand Spawn(string commandName = "SpawnCommand")
+        public DotsCommand Spawn(string commandName = "SpawnCommand", string id = null)
         {
             var command = new DotsCommand(commandName);
 
-            var manager = _manager;
             var prefab = _prefab;
             var count = _count;
             var pos = _position;
             var rot = _rotation;
             var scale = _scale;
 
-            command.SetTargetResolver(() =>
+            // 1. Резолвер теперь ПРИНИМАЕТ BridgeState в момент вызова Execute!
+            command.SetTargetResolver((state) =>
             {
+                // 2. Достаем актуальный менеджер из прилетевшего стейта
+                var manager = state.Manager;
+
                 if (prefab == Entity.Null)
                 {
-                    Debug.LogError("[DotsBridge] Попытка заспавнить Entity.Null!");
-                    return new EntityBatch(default, manager);
+                    UnityEngine.Debug.LogError("[DotsBridge] Попытка заспавнить Entity.Null!");
+                    // ОШИБКА ИСПРАВЛЕНА: Передаем state вместо manager
+                    return new EntityBatch(default, state);
                 }
 
                 NativeList<Entity> spawnedEntities = new NativeList<Entity>(count, Allocator.TempJob);
@@ -81,15 +84,27 @@ namespace DotsBridge
                     spawnedEntities.AddRange(tempArray);
                 }
 
-                var transform = LocalTransform.FromPositionRotationScale(pos, rot, scale);
+                var transform = Unity.Transforms.LocalTransform.FromPositionRotationScale(pos, rot, scale);
+
+                // Считаем хэш заранее, если ID был передан
+                int idHash = string.IsNullOrEmpty(id) ? 0 : EntityBridge.GetHash(id);
+
                 foreach (var entity in spawnedEntities)
                 {
                     manager.SetComponentData(entity, transform);
+
+                    // 3. ИНТЕГРАЦИЯ С РЕАКТИВНОЙ СИСТЕМОЙ: 
+                    // Вешаем бейджик, чтобы BridgeIdentitySyncSystem сразу нашла новичка!
+                    if (idHash != 0)
+                    {
+                        manager.AddComponentData(entity, new BridgeIdentity { Hash = idHash });
+                    }
                 }
 
-                return new EntityBatch(spawnedEntities, manager);
+                // ОШИБКА ИСПРАВЛЕНА: Передаем state вместо manager
+                return new EntityBatch(spawnedEntities, state);
 
-            }, true);
+            }, true); // true = батч (spawnedEntities) будет очищен после выполнения команды
 
             return command;
         }

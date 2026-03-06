@@ -15,20 +15,23 @@ namespace DotsBridge
     {
         public readonly int ID;
         public NativeList<Entity> Entities;
-        public readonly EntityManager Manager;
+
+        public readonly BridgeState State;
+
         public JobHandle CleanupHandle;
 
-        public EntityContainer(int id, EntityManager manager)
+        public EntityContainer(int id, BridgeState state)
         {
             ID = id;
-            Manager = manager;
+            State = state;
             Entities = new NativeList<Entity>(Allocator.Persistent);
         }
 
         public EntityBatch GetBatch()
         {
             CleanupHandle.Complete();
-            return new EntityBatch(Entities, Manager);
+
+            return new EntityBatch(Entities, State);
         }
 
         public void Dispose()

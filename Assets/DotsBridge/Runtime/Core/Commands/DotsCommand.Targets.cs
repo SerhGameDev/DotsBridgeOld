@@ -6,12 +6,6 @@ namespace DotsBridge
 {
     public partial class DotsCommand
     {
-        public DotsCommand GetById(string targetId)
-        {
-            _targetResolver = () => EntityBridge.GetById(targetId);
-            _requiresDispose = false;
-            return this;
-        }
 
         public DotsCommand GetByTags(params string[] tags)
         {
@@ -24,7 +18,7 @@ namespace DotsBridge
         /// Позволяет внедрить кастомную логику получения (или создания) сущностей.
         /// Используется, например, в SpawnerBuilder.
         /// </summary>
-        public DotsCommand SetTargetResolver(Func<EntityBatch> resolver, bool requiresDispose)
+        internal DotsCommand SetTargetResolver(Func<BridgeState, EntityBatch> resolver, bool requiresDispose = false)
         {
             _targetResolver = resolver;
             _requiresDispose = requiresDispose;

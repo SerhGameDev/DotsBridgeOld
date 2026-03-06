@@ -4,17 +4,16 @@ using DotsBridge.Modules.Network;
 
 public class NetworkTester : MonoBehaviour
 {
-    public DotsNetworkManager NetManager;
 
     private void OnEnable()
     {
         // Подписываемся на твой OOP-ивент моста
-        DotsNetworkManager.OnClientConnected += OnConnectedSuccess;
+        NetEntityBridge.OnClientConnected += OnConnectedSuccess;
     }
 
     private void OnDisable()
     {
-        DotsNetworkManager.OnClientConnected -= OnConnectedSuccess;
+        NetEntityBridge.OnClientConnected -= OnConnectedSuccess;
     }
 
     void Update()
@@ -23,14 +22,14 @@ public class NetworkTester : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.S))
         {
             Debug.Log("Запускаем сервер...");
-            NetManager.StartServer();
+            NetEntityBridge.StartServer();
         }
 
         // Нажимаем 'C', чтобы Клиент подключился к Серверу
         if (Input.GetKeyDown(KeyCode.C))
         {
             Debug.Log("Клиент пытается подключиться...");
-            NetManager.ConnectToServer();
+            NetEntityBridge.ConnectToServer();
         }
     }
 

@@ -1,114 +1,165 @@
 using System;
-using System.Runtime.CompilerServices;
 using Unity.Collections;
 using Unity.Entities;
 
-
 namespace DotsBridge
 {
-    public static partial class EntityBridge
+    /// <summary>
+    /// Безопасный маршализатор запросов (Query).
+    /// Отвечает за роутинг между мирами и автоматическое управление памятью.
+    /// </summary>
+    public struct DotsQuery
     {
-        /// <summary>
-        /// Базовый метод. Получает сущности, содержащие ВСЕ указанные типы компонентов.
-        /// ВНИМАНИЕ: Обязательно вызовите Dispose() у батча для избежания утечек памяти!
-        /// Скорость: Средняя (Создает EntityQuery и аллоцирует NativeList).
-        /// Лимит: Из-за аллокации памяти лучше не использовать каждый кадр.
-        /// </summary>
-        public static EntityBatch Get(params ComponentType[] componentTypes)
+        private readonly BridgeState _state;
+        private Func<BridgeState, EntityBatch> _targetResolver;
+        private bool _requiresDispose;
+
+        public DotsQuery(BridgeState state)
         {
-            if (componentTypes == null || componentTypes.Length == 0)
-                throw new ArgumentException("Укажите хотя бы один компонент для поиска.");
-
-            var queryDesc = new EntityQueryDesc { All = componentTypes };
-            var query = Manager.CreateEntityQuery(queryDesc);
-            var entityArray = query.ToEntityArray(Allocator.Temp);
-
-            var entityList = new NativeList<Entity>(entityArray.Length, Allocator.Persistent);
-            entityList.AddRange(entityArray);
-
-            entityArray.Dispose();
-            query.Dispose();
-
-            return new EntityBatch(entityList, Manager);
+            _state = state ?? EntityBridge.GetActiveState();
+            _targetResolver = null;
+            _requiresDispose = false;
         }
 
-        public static DotsCommand Get(this DotsCommand сommand, params ComponentType[] componentTypes) =>
-            сommand.Do(batch => Get(componentTypes));
+        // =========================================================
+        // ВНУТРЕННЕЕ УПРАВЛЕНИЕ (Для экстеншенов)
+        // =========================================================
 
-        /// <summary>
-        /// Получает сущности по 1 компоненту-маркеру.
-        /// ВНИМАНИЕ: Обязательно вызовите Dispose() у батча для избежания утечек памяти!
-        /// Скорость: Средняя (Аллокация NativeList).
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static EntityBatch Get<T1>()
-            where T1 : struct, IComponentData
-            => Get(ComponentType.ReadOnly<T1>());
+        internal DotsQuery SetInternalResolver(Func<BridgeState, EntityBatch> resolver, bool requiresDispose)
+        {
+            this._targetResolver = resolver;
+            this._requiresDispose = requiresDispose;
+            return this;
+        }
 
-        public static DotsCommand Get<T1>(this DotsCommand сommand)
-            where T1 : struct, IComponentData => сommand.Do(batch => Get<T1>());
+        // =========================================================
+        // РОУТИНГ (ВЫБОР ЦЕЛИ)
+        // =========================================================
 
-        /// <summary>
-        /// Получает сущности по 2 компонентам-маркерам.
-        /// ВНИМАНИЕ: Обязательно вызовите Dispose() у батча для избежания утечек памяти!
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static EntityBatch Get<T1, T2>()
-            where T1 : struct, IComponentData
-            where T2 : struct, IComponentData
-            => Get(ComponentType.ReadOnly<T1>(), ComponentType.ReadOnly<T2>());
+        /// <summary> Выбор конкретной группы сущностей по строковому ID. </summary>
+        public DotsQuery GetById(string id)
+        {
+            _targetResolver = (s) => EntityBridge.GetByIdInternal(s, id);
+            _requiresDispose = false; // Контейнеры ID живут вечно, их нельзя удалять
+            return this;
+        }
 
-        /// <summary>
-        /// Получает сущности по 3 компонентам-маркерам.
-        /// ВНИМАНИЕ: Обязательно вызовите Dispose() у батча для избежания утечек памяти!
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static EntityBatch Get<T1, T2, T3>()
-            where T1 : struct, IComponentData
-            where T2 : struct, IComponentData
-            where T3 : struct, IComponentData
-            => Get(ComponentType.ReadOnly<T1>(), ComponentType.ReadOnly<T2>(), ComponentType.ReadOnly<T3>());
+        // =========================================================
+        // БЕЗОПАСНАЯ ПЕСОЧНИЦА (RUN)
+        // =========================================================
 
-        /// <summary>
-        /// Получает сущности по 4 компонентам-маркерам.
-        /// ВНИМАНИЕ: Обязательно вызовите Dispose() у батча для избежания утечек памяти!
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static EntityBatch Get<T1, T2, T3, T4>()
-            where T1 : struct, IComponentData
-            where T2 : struct, IComponentData
-            where T3 : struct, IComponentData
-            where T4 : struct, IComponentData
-            => Get(ComponentType.ReadOnly<T1>(), ComponentType.ReadOnly<T2>(), ComponentType.ReadOnly<T3>(), ComponentType.ReadOnly<T4>());
+        /// <summary> Выполняет логику чтения, возвращает результат и чистит временную память. </summary>
+        public T Run<T>(Func<EntityBatch, T> readLogic)
+        {
+            if (_targetResolver == null || _state == null) return default;
 
-        /// <summary>
-        /// Получает сущности по 5 компонентам-маркерам.
-        /// ВНИМАНИЕ: Обязательно вызовите Dispose() у батча для избежания утечек памяти!
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static EntityBatch Get<T1, T2, T3, T4, T5>()
-            where T1 : struct, IComponentData
-            where T2 : struct, IComponentData
-            where T3 : struct, IComponentData
-            where T4 : struct, IComponentData
-            where T5 : struct, IComponentData
-            => Get(ComponentType.ReadOnly<T1>(), ComponentType.ReadOnly<T2>(), ComponentType.ReadOnly<T3>(), ComponentType.ReadOnly<T4>(), ComponentType.ReadOnly<T5>());
+            EntityBatch batch = _targetResolver.Invoke(_state);
+            T result = readLogic(batch);
 
-        /// <summary>
-        /// Получает сущности по 6 компонентам-маркерам.
-        /// ВНИМАНИЕ: Обязательно вызовите Dispose() у батча для избежания утечек памяти!
-        /// Скорость: Средняя (Аллокация NativeList).
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static EntityBatch Get<T1, T2, T3, T4, T5, T6>()
-            where T1 : struct, IComponentData
-            where T2 : struct, IComponentData
-            where T3 : struct, IComponentData
-            where T4 : struct, IComponentData
-            where T5 : struct, IComponentData
-            where T6 : struct, IComponentData
-            => Get(ComponentType.ReadOnly<T1>(), ComponentType.ReadOnly<T2>(), ComponentType.ReadOnly<T3>(), ComponentType.ReadOnly<T4>(), ComponentType.ReadOnly<T5>(), ComponentType.ReadOnly<T6>());
+            // Если батч был временным (создан через Get<T>), удаляем его NativeList
+            if (_requiresDispose && batch.Entities.IsCreated)
+                batch.Entities.Dispose();
 
+            return result;
+        }
 
+        /// <summary> Выполняет логику чтения без возврата значения и чистит временную память. </summary>
+        public void Run(Action<EntityBatch> readLogic)
+        {
+            if (_targetResolver == null || _state == null) return;
+
+            EntityBatch batch = _targetResolver.Invoke(_state);
+            readLogic(batch);
+
+            if (_requiresDispose && batch.Entities.IsCreated)
+                batch.Entities.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// Методы расширения для DotsQuery. Сюда можно добавлять любую логику чтения.
+    /// </summary>
+    public static partial class DotsQueryExtensions
+    {
+        // --- ВЫБОР ЦЕЛИ ПО КОМПОНЕНТАМ ---
+
+        public static DotsQuery Get<T1>(this DotsQuery query) where T1 : struct, IComponentData
+            => query.SetInternalResolver(s => EntityBridge.GetByComponentsInternal(s, new[] { ComponentType.ReadOnly<T1>() }), true);
+
+        public static DotsQuery Get<T1, T2>(this DotsQuery query)
+            where T1 : struct, IComponentData where T2 : struct, IComponentData
+            => query.SetInternalResolver(s => EntityBridge.GetByComponentsInternal(s, new[] { ComponentType.ReadOnly<T1>(), ComponentType.ReadOnly<T2>() }), true);
+
+        // --- МЕТОДЫ ЧТЕНИЯ ДАННЫХ ---
+
+        /// <summary> Получает данные первого найденного компонента в выборке. </summary>
+        public static T GetFirstData<T>(this DotsQuery query) where T : unmanaged, IComponentData
+        {
+            return query.Run(batch =>
+            {
+                if (batch.IsEmpty) return default;
+
+                var entity = batch.Entities[0];
+                // Для ОДНОЙ сущности можно использовать Manager напрямую, это просто и быстро
+                if (batch.Manager.HasComponent<T>(entity))
+                    return batch.Manager.GetComponentData<T>(entity);
+
+                return default;
+            });
+        }
+
+        /// <summary> Выполняет действие для каждой сущности в выборке (Оптимизировано через Lookup). </summary>
+        public static void ForEach<T>(this DotsQuery query, Action<Entity, T> action) where T : unmanaged, IComponentData
+        {
+            query.Run(batch =>
+            {
+                if (batch.IsEmpty) return;
+
+                // 1. Получаем доступ к системному состоянию через Unmanaged World
+                var unmanagedWorld = batch.Manager.World.Unmanaged;
+
+                // 2. Находим (или создаем) нашу системную прослойку
+                SystemHandle bridgeSystem = unmanagedWorld.GetExistingUnmanagedSystem<DotsBridgeSystem>();
+                if (bridgeSystem == SystemHandle.Null)
+                    bridgeSystem = batch.Manager.World.CreateSystem<DotsBridgeSystem>();
+
+                // 3. Получаем State и из него - заветный Lookup
+                ref SystemState state = ref unmanagedWorld.ResolveSystemStateRef(bridgeSystem);
+                var lookup = state.GetComponentLookup<T>(true); // true = ReadOnly
+
+                // 4. Обязательно обновляем Lookup перед использованием!
+                lookup.Update(ref state);
+
+                for (int i = 0; i < batch.Count; i++)
+                {
+                    var entity = batch.Entities[i];
+                    if (lookup.HasComponent(entity))
+                        action(entity, lookup[entity]);
+                }
+            });
+        }
+
+        /// <summary> Копирует данные всех сущностей в NativeArray. </summary>
+        public static NativeArray<T> GetDataArray<T>(this DotsQuery query, Allocator allocator = Allocator.Temp) where T : unmanaged, IComponentData
+        {
+            return query.Run(batch =>
+            {
+                if (batch.IsEmpty) return new NativeArray<T>(0, allocator);
+
+                var result = new NativeArray<T>(batch.Count, allocator);
+
+                // Повторяем логику получения Lookup
+                var unmanagedWorld = batch.Manager.World.Unmanaged;
+                SystemHandle bridgeSystem = unmanagedWorld.GetExistingUnmanagedSystem<DotsBridgeSystem>();
+                ref SystemState state = ref unmanagedWorld.ResolveSystemStateRef(bridgeSystem);
+                var lookup = state.GetComponentLookup<T>(true);
+                lookup.Update(ref state);
+
+                for (int i = 0; i < batch.Count; i++)
+                    result[i] = lookup[batch.Entities[i]];
+
+                return result;
+            });
+        }
     }
 }

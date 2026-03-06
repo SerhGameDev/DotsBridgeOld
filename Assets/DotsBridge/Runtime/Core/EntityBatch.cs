@@ -6,15 +6,18 @@ using Unity.Entities;
 
 namespace DotsBridge
 {
-    public readonly partial struct EntityBatch : IDisposable
+  public readonly partial struct EntityBatch : IDisposable
     {
         public readonly NativeList<Entity> Entities;
-        public readonly EntityManager Manager;
+        public readonly BridgeState State; // Теперь батч хранит всё состояние мира!
 
-        public EntityBatch(NativeList<Entity> entities, EntityManager manager)
+        // Удобное свойство-шорткат, чтобы не переписывать старый код
+        public EntityManager Manager => State.Manager; 
+
+        public EntityBatch(NativeList<Entity> entities, BridgeState state)
         {
             Entities = entities;
-            Manager = manager;
+            State = state;
         }
 
         public void Dispose()
@@ -22,7 +25,6 @@ namespace DotsBridge
             if (Entities.IsCreated)
                 Entities.Dispose();
         }
-
     }
     public static partial class EntityBridge
     {
@@ -42,11 +44,6 @@ namespace DotsBridge
             });
 
             return list;
-        }
-
-        public static DotsCommand Command(string id)
-        {
-            return new DotsCommand(id);
         }
 
     }
