@@ -1,8 +1,5 @@
-#if DOTSBRIDGE_NETCODE
-using Unity.Entities;
 using Unity.NetCode;
 using Unity.Mathematics;
-using DotsBridge.Modules.Network;
 
 namespace DotsBridge
 {
@@ -72,4 +69,3 @@ namespace DotsBridge
         }
     }
 }
-#endif

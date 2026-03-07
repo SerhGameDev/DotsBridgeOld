@@ -1,48 +1,45 @@
-#if DOTSBRIDGE_NETCODE
 using Unity.Entities;
 using Unity.NetCode;
 using Unity.Collections;
 
 namespace DotsBridge.Modules.Network.Systems
 {
-    // Система, ловящая RPC на сервере
-    public partial class ServerOopRpcReceiveSystem : SystemBase
+    [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
+    public partial struct ServerOopRpcReceiveSystem : ISystem
     {
-        protected override void OnUpdate()
+        public void OnUpdate(ref SystemState state)
         {
-            var ecb = new EntityCommandBuffer(Allocator.Temp);
+            var rpcs = new NativeList<OopEventRpc>(Allocator.Temp);
+            var entities = new NativeList<Entity>(Allocator.Temp);
 
-            // Ищем все входящие запросы именно нашего типа OopEventRpc
-            foreach (var (rpc, req, entity) in SystemAPI.Query<RefRO<OopEventRpc>, RefRO<ReceiveRpcCommandRequest>>().WithEntityAccess())
+            // МЫ ЗАПРАШИВАЕМ ReceiveRpcCommandRequest, чтобы узнать, откуда пришел пакет
+            foreach (var (rpc, request, entity) in SystemAPI.Query<RefRW<OopEventRpc>, RefRO<ReceiveRpcCommandRequest>>().WithEntityAccess())
             {
-                // Передаем в C# ООП логику
-                OopRpcRegistry.InvokeOnServer(rpc.ValueRO.EventHash, rpc.ValueRO);
+                // Проверяем, есть ли у этого соединения NetworkId (рукопожатие пройдено)
+                if (state.EntityManager.HasComponent<NetworkId>(request.ValueRO.SourceConnection))
+                {
+                    // Достаем НАСТОЯЩИЙ ID прямо из движка
+                    var networkId = state.EntityManager.GetComponentData<NetworkId>(request.ValueRO.SourceConnection).Value;
 
-                // Обязательно удаляем пакет, чтобы не обрабатывать его дважды
-                ecb.DestroyEntity(entity);
+                    var data = rpc.ValueRW;
+                    // ПЕРЕЗАПИСЫВАЕМ IntValue настоящим ID (защита от читов)
+                    data.IntValue = networkId;
+
+                    rpcs.Add(data);
+                }
+                entities.Add(entity);
             }
 
-            ecb.Playback(EntityManager);
-            ecb.Dispose();
-        }
-    }
+            if (entities.Length > 0)
+                state.EntityManager.DestroyEntity(entities.AsArray());
 
-    // Система, ловящая RPC на клиенте
-    public partial class ClientOopRpcReceiveSystem : SystemBase
-    {
-        protected override void OnUpdate()
-        {
-            var ecb = new EntityCommandBuffer(Allocator.Temp);
-
-            foreach (var (rpc, req, entity) in SystemAPI.Query<RefRO<OopEventRpc>, RefRO<ReceiveRpcCommandRequest>>().WithEntityAccess())
+            foreach (var rpcData in rpcs)
             {
-                OopRpcRegistry.InvokeOnClient(rpc.ValueRO.EventHash, rpc.ValueRO);
-                ecb.DestroyEntity(entity);
+                OopRpcRegistry.InvokeOnServer(rpcData.EventHash, rpcData);
             }
 
-            ecb.Playback(EntityManager);
-            ecb.Dispose();
+            rpcs.Dispose();
+            entities.Dispose();
         }
     }
 }
-#endif

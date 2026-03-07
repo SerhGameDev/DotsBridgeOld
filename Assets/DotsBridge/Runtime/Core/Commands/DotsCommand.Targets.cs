@@ -6,19 +6,6 @@ namespace DotsBridge
 {
     public partial class DotsCommand
     {
-        public DotsCommand GetById(string targetId)
-        {
-            _targetResolver = () => EntityBridge.GetById(targetId);
-            _requiresDispose = false;
-            return this;
-        }
-
-        public DotsCommand GetByTags(params string[] tags)
-        {
-            _targetResolver = () => EntityBridge.GetByTags(tags);
-            _requiresDispose = true;
-            return this;
-        }
 
         /// <summary>
         /// Позволяет внедрить кастомную логику получения (или создания) сущностей.

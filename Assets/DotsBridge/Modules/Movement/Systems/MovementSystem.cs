@@ -4,19 +4,20 @@ using Unity.Transforms;
 
 namespace DotsBridge.Modules.Movement
 {
+    // Обязательно указываем, что система работает в мультиплеере!
+    [WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation | WorldSystemFilterFlags.ServerSimulation)]
     public partial struct MovementTransformSystem : ISystem
     {
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            var deltaTime = SystemAPI.Time.DeltaTime;
-
             new MoveJob
             {
                 DeltaTime = SystemAPI.Time.DeltaTime
             }.ScheduleParallel();
         }
     }
+
     [BurstCompile]
     public partial struct MoveJob : IJobEntity
     {

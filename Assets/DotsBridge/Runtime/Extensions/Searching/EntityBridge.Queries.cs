@@ -8,107 +8,120 @@ namespace DotsBridge
 {
     public static partial class EntityBridge
     {
+        // =========================================================
+        // БАЗОВЫЕ МЕТОДЫ (SERVER / CLIENT)
+        // =========================================================
+
+        public static EntityBatch GetForServer(params ComponentType[] componentTypes) => Get(ServerRegistry, componentTypes);
+        public static EntityBatch GetForClient(params ComponentType[] componentTypes) => Get(ClientRegistry, componentTypes);
+
         /// <summary>
-        /// Базовый метод. Получает сущности, содержащие ВСЕ указанные типы компонентов.
-        /// ВНИМАНИЕ: Обязательно вызовите Dispose() у батча для избежания утечек памяти!
-        /// Скорость: Средняя (Создает EntityQuery и аллоцирует NativeList).
-        /// Лимит: Из-за аллокации памяти лучше не использовать каждый кадр.
+        /// Приватный базовый метод. Выполняет поиск в конкретном реестре.
         /// </summary>
-        public static EntityBatch Get(params ComponentType[] componentTypes)
+        private static EntityBatch Get(BridgeRegistry registry, params ComponentType[] componentTypes)
         {
+            var targetRegistry = registry ?? GetActiveRegistry();
+
+            if (targetRegistry == null)
+                throw new ArgumentException("[DotsBridge] Не найден активный Registry для выполнения Get!");
+
             if (componentTypes == null || componentTypes.Length == 0)
                 throw new ArgumentException("Укажите хотя бы один компонент для поиска.");
 
             var queryDesc = new EntityQueryDesc { All = componentTypes };
-            var query = Manager.CreateEntityQuery(queryDesc);
+            var query = targetRegistry.Manager.CreateEntityQuery(queryDesc);
+
+            // Получаем сущности из конкретного менеджера мира
             var entityArray = query.ToEntityArray(Allocator.Temp);
 
             var entityList = new NativeList<Entity>(entityArray.Length, Allocator.Persistent);
             entityList.AddRange(entityArray);
 
             entityArray.Dispose();
-            query.Dispose();
+            // Query не диспозим, так как они кэшируются в EntityManager
 
             return new EntityBatch(entityList, Manager);
         }
 
-        public static DotsCommand Get(this DotsCommand сommand, params ComponentType[] componentTypes) =>
-            сommand.Do(batch => Get(componentTypes));
 
-        /// <summary>
-        /// Получает сущности по 1 компоненту-маркеру.
-        /// ВНИМАНИЕ: Обязательно вызовите Dispose() у батча для избежания утечек памяти!
-        /// Скорость: Средняя (Аллокация NativeList).
-        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static EntityBatch Get<T1>()
-            where T1 : struct, IComponentData
-            => Get(ComponentType.ReadOnly<T1>());
+        public static EntityBatch GetForServer<T1>() where T1 : struct, IComponentData
+            => Get(ServerRegistry, ComponentType.ReadOnly<T1>());
 
-        public static DotsCommand Get<T1>(this DotsCommand сommand)
-            where T1 : struct, IComponentData => сommand.Do(batch => Get<T1>());
-
-        /// <summary>
-        /// Получает сущности по 2 компонентам-маркерам.
-        /// ВНИМАНИЕ: Обязательно вызовите Dispose() у батча для избежания утечек памяти!
-        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static EntityBatch Get<T1, T2>()
-            where T1 : struct, IComponentData
-            where T2 : struct, IComponentData
-            => Get(ComponentType.ReadOnly<T1>(), ComponentType.ReadOnly<T2>());
+        public static EntityBatch GetForServer<T1, T2>()
+            where T1 : struct, IComponentData where T2 : struct, IComponentData
+            => Get(ServerRegistry, ComponentType.ReadOnly<T1>(), ComponentType.ReadOnly<T2>());
 
-        /// <summary>
-        /// Получает сущности по 3 компонентам-маркерам.
-        /// ВНИМАНИЕ: Обязательно вызовите Dispose() у батча для избежания утечек памяти!
-        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static EntityBatch Get<T1, T2, T3>()
-            where T1 : struct, IComponentData
-            where T2 : struct, IComponentData
-            where T3 : struct, IComponentData
-            => Get(ComponentType.ReadOnly<T1>(), ComponentType.ReadOnly<T2>(), ComponentType.ReadOnly<T3>());
+        public static EntityBatch GetForServer<T1, T2, T3>()
+            where T1 : struct, IComponentData where T2 : struct, IComponentData where T3 : struct, IComponentData
+            => Get(ServerRegistry, ComponentType.ReadOnly<T1>(), ComponentType.ReadOnly<T2>(), ComponentType.ReadOnly<T3>());
 
-        /// <summary>
-        /// Получает сущности по 4 компонентам-маркерам.
-        /// ВНИМАНИЕ: Обязательно вызовите Dispose() у батча для избежания утечек памяти!
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static EntityBatch Get<T1, T2, T3, T4>()
-            where T1 : struct, IComponentData
-            where T2 : struct, IComponentData
-            where T3 : struct, IComponentData
-            where T4 : struct, IComponentData
-            => Get(ComponentType.ReadOnly<T1>(), ComponentType.ReadOnly<T2>(), ComponentType.ReadOnly<T3>(), ComponentType.ReadOnly<T4>());
 
-        /// <summary>
-        /// Получает сущности по 5 компонентам-маркерам.
-        /// ВНИМАНИЕ: Обязательно вызовите Dispose() у батча для избежания утечек памяти!
-        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static EntityBatch Get<T1, T2, T3, T4, T5>()
-            where T1 : struct, IComponentData
-            where T2 : struct, IComponentData
-            where T3 : struct, IComponentData
-            where T4 : struct, IComponentData
+        public static EntityBatch GetForClient<T1>() where T1 : struct, IComponentData
+            => Get(ClientRegistry, ComponentType.ReadOnly<T1>());
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static EntityBatch GetForClient<T1, T2>()
+            where T1 : struct, IComponentData where T2 : struct, IComponentData
+            => Get(ClientRegistry, ComponentType.ReadOnly<T1>(), ComponentType.ReadOnly<T2>());
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static EntityBatch GetForClient<T1, T2, T3>()
+            where T1 : struct, IComponentData where T2 : struct, IComponentData where T3 : struct, IComponentData
+            => Get(ClientRegistry, ComponentType.ReadOnly<T1>(), ComponentType.ReadOnly<T2>(), ComponentType.ReadOnly<T3>());
+
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static EntityBatch GetForServer<T1, T2, T3, T4>()
+            where T1 : struct, IComponentData where T2 : struct, IComponentData
+            where T3 : struct, IComponentData where T4 : struct, IComponentData
+            => Get(ServerRegistry, ComponentType.ReadOnly<T1>(), ComponentType.ReadOnly<T2>(),
+                   ComponentType.ReadOnly<T3>(), ComponentType.ReadOnly<T4>());
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static EntityBatch GetForServer<T1, T2, T3, T4, T5>()
+            where T1 : struct, IComponentData where T2 : struct, IComponentData
+            where T3 : struct, IComponentData where T4 : struct, IComponentData
             where T5 : struct, IComponentData
-            => Get(ComponentType.ReadOnly<T1>(), ComponentType.ReadOnly<T2>(), ComponentType.ReadOnly<T3>(), ComponentType.ReadOnly<T4>(), ComponentType.ReadOnly<T5>());
+            => Get(ServerRegistry, ComponentType.ReadOnly<T1>(), ComponentType.ReadOnly<T2>(),
+                   ComponentType.ReadOnly<T3>(), ComponentType.ReadOnly<T4>(), ComponentType.ReadOnly<T5>());
 
-        /// <summary>
-        /// Получает сущности по 6 компонентам-маркерам.
-        /// ВНИМАНИЕ: Обязательно вызовите Dispose() у батча для избежания утечек памяти!
-        /// Скорость: Средняя (Аллокация NativeList).
-        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static EntityBatch Get<T1, T2, T3, T4, T5, T6>()
-            where T1 : struct, IComponentData
-            where T2 : struct, IComponentData
-            where T3 : struct, IComponentData
-            where T4 : struct, IComponentData
-            where T5 : struct, IComponentData
-            where T6 : struct, IComponentData
-            => Get(ComponentType.ReadOnly<T1>(), ComponentType.ReadOnly<T2>(), ComponentType.ReadOnly<T3>(), ComponentType.ReadOnly<T4>(), ComponentType.ReadOnly<T5>(), ComponentType.ReadOnly<T6>());
+        public static EntityBatch GetForServer<T1, T2, T3, T4, T5, T6>()
+            where T1 : struct, IComponentData where T2 : struct, IComponentData
+            where T3 : struct, IComponentData where T4 : struct, IComponentData
+            where T5 : struct, IComponentData where T6 : struct, IComponentData
+            => Get(ServerRegistry, ComponentType.ReadOnly<T1>(), ComponentType.ReadOnly<T2>(),
+                   ComponentType.ReadOnly<T3>(), ComponentType.ReadOnly<T4>(),
+                   ComponentType.ReadOnly<T5>(), ComponentType.ReadOnly<T6>());
 
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static EntityBatch GetForClient<T1, T2, T3, T4>()
+            where T1 : struct, IComponentData where T2 : struct, IComponentData
+            where T3 : struct, IComponentData where T4 : struct, IComponentData
+            => Get(ClientRegistry, ComponentType.ReadOnly<T1>(), ComponentType.ReadOnly<T2>(),
+                   ComponentType.ReadOnly<T3>(), ComponentType.ReadOnly<T4>());
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static EntityBatch GetForClient<T1, T2, T3, T4, T5>()
+            where T1 : struct, IComponentData where T2 : struct, IComponentData
+            where T3 : struct, IComponentData where T4 : struct, IComponentData
+            where T5 : struct, IComponentData
+            => Get(ClientRegistry, ComponentType.ReadOnly<T1>(), ComponentType.ReadOnly<T2>(),
+                   ComponentType.ReadOnly<T3>(), ComponentType.ReadOnly<T4>(), ComponentType.ReadOnly<T5>());
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static EntityBatch GetForClient<T1, T2, T3, T4, T5, T6>()
+            where T1 : struct, IComponentData where T2 : struct, IComponentData
+            where T3 : struct, IComponentData where T4 : struct, IComponentData
+            where T5 : struct, IComponentData where T6 : struct, IComponentData
+            => Get(ClientRegistry, ComponentType.ReadOnly<T1>(), ComponentType.ReadOnly<T2>(),
+                   ComponentType.ReadOnly<T3>(), ComponentType.ReadOnly<T4>(),
+                   ComponentType.ReadOnly<T5>(), ComponentType.ReadOnly<T6>());
 
     }
 }

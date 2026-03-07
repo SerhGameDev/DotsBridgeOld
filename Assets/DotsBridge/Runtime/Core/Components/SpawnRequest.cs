@@ -1,7 +1,7 @@
 ﻿using Unity.Entities;
 using Unity.Mathematics;
 
-namespace DotsBridge.Spawning
+namespace DotsBridge
 {
     public struct SpawnRequest : IComponentData
     {
@@ -15,5 +15,6 @@ namespace DotsBridge.Spawning
         public bool OverrideScale;
 
         public int ID;
+        public int OwnerID;
     }
 }

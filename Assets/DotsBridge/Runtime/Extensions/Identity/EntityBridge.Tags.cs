@@ -13,39 +13,39 @@ namespace DotsBridge
         /// Скорость: Мгновенно.
         /// Лимит: Вызывать только один раз при старте игры/сцены (Bootstrapper).
         /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void RegisterTag<T>(string tagName) where T : struct, IComponentData
-        {
-            TagRegistry[tagName] = ComponentType.ReadOnly<T>();
-        }
+        public static void RegisterTagServer<T>(string tagName) where T : struct, IComponentData
+            => ServerRegistry.TagRegistry[tagName] = ComponentType.ReadOnly<T>();
+        /// <summary>
+        /// Поиск по ТЕГАМ (Компонентам-маркерам)
+        /// </summary>
+        public static EntityBatch GetByTagServer(params string[] tags) => GetByTags(ServerRegistry, tags);
 
+        /// <summary>
+        /// Поиск по ТЕГАМ на клиенте
+        /// </summary>
+        public static EntityBatch GetByTagClient(params string[] tags) => GetByTags(ClientRegistry, tags);
         /// <summary>
         /// Получает сущности, содержащие ВСЕ указанные строковые теги.
         /// ВНИМАНИЕ: Обязательно вызовите Dispose() у батча для избежания утечек памяти!
         /// Скорость: Средняя (Поиск в словаре + аллокация NativeList).
         /// Лимит: Удобно для разовых событий и скриптинга. Избегать частого вызова в Update.
         /// </summary>
-        public static EntityBatch GetByTags(params string[] tags)
+        public static EntityBatch GetForClient(params string[] tags) => GetByTags(ClientRegistry, tags);
+
+        private static EntityBatch GetByTags(BridgeRegistry registry, string[] tags)
         {
-            if (tags == null || tags.Length == 0)
-                throw new ArgumentException("Укажите хотя бы один тег для поиска.");
+            if (registry == null || tags == null || tags.Length == 0) return default;
 
             var types = new ComponentType[tags.Length];
             for (int i = 0; i < tags.Length; i++)
             {
-                if (TagRegistry.TryGetValue(tags[i], out var type))
-                {
+                if (registry.TagRegistry.TryGetValue(tags[i], out var type))
                     types[i] = type;
-                }
                 else
-                {
-                    UnityEngine.Debug.LogWarning($"Тег '{tags[i]}' не зарегистрирован в DotsBridge.");
-                    return new EntityBatch(new NativeList<Entity>(Allocator.Persistent), Manager);
-                }
+                    return default;
             }
 
-            return Get(types);
+            return Get(registry, types); 
         }
-
     }
 }

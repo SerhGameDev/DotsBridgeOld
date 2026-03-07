@@ -11,7 +11,6 @@ namespace DotsBridge
         {
             if (batch.Entities.IsCreated && batch.Entities.Length > 0)
             {
-                // Быстро вешаем тег смерти на весь батч
                 batch.Manager.AddComponent<DestroyTag>(batch.Entities.AsArray());
             }
             return batch;

@@ -1,6 +1,7 @@
 using System;
 using Unity.Entities;
 using UnityEngine;
+using static Unity.Burst.Intrinsics.X86.Avx;
 
 namespace DotsBridge
 {
@@ -55,18 +56,49 @@ namespace DotsBridge
 
         public static DotsCommand SetSpawnOnDeath(this DotsCommand cmd, Entity prefab) => cmd.Do(b => b.SetSpawnOnDeath(prefab));
 
+
         /// <summary>
         /// [OOP Bridge] Подписывает классический C# метод на событие смерти этих сущностей.
+        /// Безопасно для мультиплеера: подписка сохраняется в реестре конкретного мира.
         /// </summary>
-        public static EntityBatch SubscribeOnDeath(this EntityBatch batch, Action<Entity> onDeathAction)
+        public static EntityBatch SubscribeOnDeathForServer(this EntityBatch batch, Action<Entity> onDeathAction)
         {
+            return SubscribeOnDeath(batch, onDeathAction, ServerRegistry);
+        }
+        /// <summary>
+        /// [OOP Bridge] Подписывает классический C# метод на событие смерти этих сущностей.
+        /// Безопасно для мультиплеера: подписка сохраняется в реестре конкретного мира.
+        /// </summary>
+        public static EntityBatch SubscribeOnDeathForClient(this EntityBatch batch, Action<Entity> onDeathAction)
+        {
+            return SubscribeOnDeath(batch, onDeathAction, ClientRegistry);
+        }
+
+        /// <summary>
+        /// [OOP Bridge] Подписывает классический C# метод на событие смерти этих сущностей.
+        /// Безопасно для мультиплеера: подписка сохраняется в реестре конкретного мира.
+        /// </summary>
+        public static EntityBatch SubscribeOnDeath(this EntityBatch batch, Action<Entity> onDeathAction, BridgeRegistry registry )
+        {
+            if (registry == null) return batch;
+
             foreach (var entity in batch.Entities)
             {
-                EntityBridge.RegisterDestroy(entity, onDeathAction);
+                if (registry.OnDestroyEvents.ContainsKey(entity))
+                {
+                    registry.OnDestroyEvents[entity] += onDeathAction;
+                }
+                else
+                {
+                    registry.OnDestroyEvents[entity] = onDeathAction;
+                }
             }
             return batch;
         }
 
-        public static DotsCommand SubscribeOnDeath(this DotsCommand cmd, Action<Entity> action) => cmd.Do(b => b.SubscribeOnDeath(action));
+        public static DotsCommand SubscribeOnDeathForClient(this DotsCommand cmd, Action<Entity> onDeathAction) => cmd.Do(b => b.SubscribeOnDeath(onDeathAction, ClientRegistry));
+
+        public static DotsCommand SubscribeOnDeathForServer(this DotsCommand cmd, Action<Entity> onDeathAction) => cmd.Do(b => b.SubscribeOnDeath(onDeathAction, ServerRegistry));
+
     }
 }

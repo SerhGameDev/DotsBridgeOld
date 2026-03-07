@@ -29,5 +29,18 @@ namespace DotsBridge
             _actions?.Invoke(batch);
             if (_requiresDispose) batch.Dispose();
         }
+        /// <summary>
+         /// Сохраняет команду в глобальный реестр EntityBridge для быстрого вызова в будущем.
+         /// </summary>
+        public void Register()
+        {
+            EntityBridge.RegisterCommandInternal(this);
+        }
+
+        public void RegisterAndExecute()
+        {
+            Register();
+            Execute();
+        }
     }
 }

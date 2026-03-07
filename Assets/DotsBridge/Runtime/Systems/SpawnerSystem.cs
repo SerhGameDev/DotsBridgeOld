@@ -1,5 +1,4 @@
-﻿using DotsBridge.Spawning;
-using Unity.Burst;
+﻿using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Transforms;
@@ -72,9 +71,16 @@ namespace DotsBridge.Systems
 
                 Ecb.AddComponent(sortKey, newEntity, spawnTransform);
 
+                // Вешаем ID, если он есть
                 if (req.ID != 0)
                 {
-                    Ecb.AddComponent(sortKey, newEntity, new EntityIdComponent { Hash = req.ID });
+                    Ecb.AddComponent(sortKey, newEntity, new BridgeIdentity { Hash = req.ID });
+                }
+
+                // НОВОЕ: Вешаем тег владельца, если он передан в запросе
+                if (req.OwnerID != 0)
+                {
+                    Ecb.AddComponent(sortKey, newEntity, new BridgeOwner { ClientId = req.OwnerID });
                 }
             }
 

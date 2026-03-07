@@ -4,7 +4,6 @@ using DotsBridge.Modules.Network;
 
 public class NetworkTester : MonoBehaviour
 {
-    public DotsNetworkManager NetManager;
 
     private void OnEnable()
     {
@@ -17,22 +16,6 @@ public class NetworkTester : MonoBehaviour
         DotsNetworkManager.OnClientConnected -= OnConnectedSuccess;
     }
 
-    void Update()
-    {
-        // Нажимаем 'S', чтобы запустить Сервер
-        if (Input.GetKeyDown(KeyCode.S))
-        {
-            Debug.Log("Запускаем сервер...");
-            NetManager.StartServer();
-        }
-
-        // Нажимаем 'C', чтобы Клиент подключился к Серверу
-        if (Input.GetKeyDown(KeyCode.C))
-        {
-            Debug.Log("Клиент пытается подключиться...");
-            NetManager.ConnectToServer();
-        }
-    }
 
     private void OnConnectedSuccess()
     {

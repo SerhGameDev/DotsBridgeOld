@@ -17,6 +17,71 @@ namespace DotsBridge
             Manager = manager;
         }
 
+        // --- Методы добавления ---
+
+        /// <summary>
+        /// Создает новую сущность и добавляет её в батч.
+        /// </summary>
+        public Entity Create(EntityArchetype archetype = default)
+        {
+            var entity = Manager.CreateEntity(archetype);
+            Entities.Add(entity);
+            return entity;
+        }
+
+        /// <summary>
+        /// Создает несколько сущностей на основе префаба и добавляет их в батч.
+        /// </summary>
+        public void Instantiate(Entity prefab, int count, Allocator allocator = Allocator.Temp)
+        {
+            using var newEntities = new NativeArray<Entity>(count, allocator);
+            Manager.Instantiate(prefab, newEntities);
+            Entities.AddRange(newEntities);
+        }
+
+        // --- Методы удаления ---
+
+        /// <summary>
+        /// Удаляет сущность из мира и из списка батча по индексу.
+        /// Использует RemoveAtSwapBack для производительности.
+        /// </summary>
+        public void RemoveAt(int index)
+        {
+            if (index < 0 || index >= Entities.Length) return;
+
+            var entity = Entities[index];
+            if (Manager.Exists(entity))
+            {
+                Manager.DestroyEntity(entity);
+            }
+
+            Entities.RemoveAtSwapBack(index);
+        }
+
+        /// <summary>
+        /// Находит сущность в списке, уничтожает её в мире и удаляет из списка.
+        /// </summary>
+        public bool Remove(Entity entity)
+        {
+            int index = Entities.AsArray().IndexOf(entity);
+            if (index == -1) return false;
+
+            RemoveAt(index);
+            return true;
+        }
+
+        /// <summary>
+        /// Уничтожает все сущности батча в мире и очищает список.
+        /// </summary>
+        public void ClearAndDestroy()
+        {
+            if (Entities.Length == 0) return;
+
+            // Эффективное массовое уничтожение через NativeArray
+            Manager.DestroyEntity(Entities.AsArray());
+            Entities.Clear();
+        }
+
         public void Dispose()
         {
             if (Entities.IsCreated)

@@ -1,26 +1,12 @@
-#if DOTSBRIDGE_NETCODE
 using System;
 using System.Collections.Generic;
-using Unity.Entities;
 using Unity.NetCode;
 using Unity.Mathematics;
-using UnityEngine;
 
 namespace DotsBridge.Modules.Network
 {
-    // 1. Сама структура RPC (то, что полетит по сети)
-    public struct OopEventRpc : IRpcCommand
-    {
-        public int EventHash;
-        public int IntValue;
-        public float FloatValue;
-        public float3 VectorValue;
-    }
-
-    // 2. Реестр для подписки из ООП (Словари живут здесь)
     public static class OopRpcRegistry
     {
-        // Словари для сервера и клиента
         private static readonly Dictionary<int, Action<OopEventRpc>> _serverListeners = new();
         private static readonly Dictionary<int, Action<OopEventRpc>> _clientListeners = new();
 
@@ -56,7 +42,6 @@ namespace DotsBridge.Modules.Network
             if (_clientListeners.ContainsKey(hash)) _clientListeners[hash] -= callback;
         }
 
-        // Внутренние методы для систем
         internal static void InvokeOnServer(int hash, OopEventRpc data)
         {
             if (_serverListeners.TryGetValue(hash, out var action)) action?.Invoke(data);
@@ -66,6 +51,26 @@ namespace DotsBridge.Modules.Network
         {
             if (_clientListeners.TryGetValue(hash, out var action)) action?.Invoke(data);
         }
+        
+        /// <summary>
+         /// Отправить RPC на СЕРВЕР (вызывать с Клиента).
+         /// </summary>
+        public static void SendToServer(string eventName, int intVal = 0, float floatVal = 0, float3 vecVal = default)
+        {
+            var registry = EntityBridge.ClientRegistry;
+            if (registry == null) return;
+
+            var em = registry.Manager;
+            var rpcData = new OopEventRpc
+            {
+                EventHash = EntityBridge.GetHash(eventName),
+                IntValue = intVal,
+                FloatValue = floatVal,
+                VectorValue = vecVal
+            };
+
+            var reqEntity = em.CreateEntity(typeof(OopEventRpc), typeof(SendRpcCommandRequest));
+            em.SetComponentData(reqEntity, rpcData);
+        }
     }
 }
-#endif

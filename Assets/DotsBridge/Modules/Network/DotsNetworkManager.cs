@@ -2,97 +2,141 @@ using System;
 using UnityEngine;
 using Unity.Entities;
 
-#if DOTSBRIDGE_NETCODE
 using Unity.NetCode;
 using Unity.Networking.Transport;
-#endif
 
 namespace DotsBridge.Modules.Network
 {
     public class DotsNetworkManager : MonoBehaviour
     {
+        public static DotsNetworkManager Instance { get; private set; }
+
+        [Header("Singleton Settings")]
+        public bool IsSingleton = true;
+
         [Header("Connection Settings")]
         public string ServerIP = "127.0.0.1";
         public ushort ServerPort = 7979;
 
         [Header("Tick Rate Settings")]
-        [Tooltip("Частота обновления физики и логики в секунду (по умолчанию 60)")]
-        public int SimulationTickRate = 60;
+        public int SimulationTickRate = 30;
+        public int NetworkTickRate = 30;
+        public int MaxBatchedTicks = 5;
 
-        [Tooltip("Как часто сервер отправляет пакеты клиентам в секунду (по умолчанию 60)")]
-        public int NetworkTickRate = 60;
+        [Header("Settings")]
+        public bool IsAutoStartServer;
 
-        [Tooltip("Максимальное количество тиков за кадр при лагах (чтобы догнать сервер)")]
-        public int MaxBatchedTicks = 3;
-
-        // --- СОБЫТИЯ ---
         public static event Action OnClientConnected;
         public static event Action OnServerStarted;
 
         private void Awake()
         {
-            // Чтобы ParrelSync работал и игра не засыпала без фокуса
+            Application.targetFrameRate = 60;
+            QualitySettings.vSyncCount = 1;
             Application.runInBackground = true;
+            SetupSingleton();
+        }
+        private void SetupSingleton()
+        {
+            if (!IsSingleton) return;
+
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            Instance = this;
+            // Раскомментируйте, если нужно сохранять между сценами:
+            // DontDestroyOnLoad(gameObject); 
         }
 
-        // --- МЕТОДЫ ДЛЯ UI И OOP ---
+        private void Start()
+        {
+
+            if (IsAutoStartServer)
+                StartServer();
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this) Instance = null;
+
+            // Здесь ваша логика очистки реестров
+            // EntityBridge.ServerRegistry = null;
+            // EntityBridge.ClientRegistry = null;
+        }
+        internal static void TriggerClientConnected()
+        {
+            OnClientConnected?.Invoke();
+        }
         public void ConnectToServer()
         {
-#if DOTSBRIDGE_NETCODE
             var clientWorld = GetWorld(WorldFlags.GameClient);
             if (clientWorld == null)
             {
-                Debug.LogError("[DotsBridge] Клиентский мир не найден.");
+                Debug.LogError("[DotsBridge] Клиентский мир не найден! Убедитесь, что в NetCode Config создан клиент.");
                 return;
+            }
+
+            if (EntityBridge.ClientRegistry == null || EntityBridge.ClientRegistry.World != clientWorld)
+            {
+                EntityBridge.ClientRegistry = new BridgeRegistry(clientWorld);
             }
 
             var em = clientWorld.EntityManager;
 
-            if (!em.CreateEntityQuery(typeof(NetworkStreamRequestConnect)).IsEmptyIgnoreFilter ||
-                !em.CreateEntityQuery(typeof(NetworkId)).IsEmptyIgnoreFilter)
+            // 1. УБИРАЕМ "МУСОР"
+            // Уничтожаем все старые зависшие запросы на коннект, оставшиеся от автоматических попыток Unity
+            var pendingRequests = em.CreateEntityQuery(typeof(NetworkStreamRequestConnect));
+            em.DestroyEntity(pendingRequests);
+
+            // 2. БЕЗОПАСНЫЙ ПАРСИНГ IP
+            ServerIP = ServerIP.Trim(); // Убираем случайные пробелы из UI
+            NetworkEndpoint endpoint;
+
+            if (ServerIP == "127.0.0.1" || ServerIP.ToLower() == "localhost")
             {
-                Debug.LogWarning("[DotsBridge] Клиент уже подключается или подключен!");
+                endpoint = NetworkEndpoint.LoopbackIpv4.WithPort(ServerPort);
+            }
+            else if (!NetworkEndpoint.TryParse(ServerIP, ServerPort, out endpoint))
+            {
+                Debug.LogError($"[DotsBridge] Ошибка: Неверный формат IP адреса: '{ServerIP}'");
                 return;
             }
 
-            ApplyNetworkSettings(clientWorld); // Применяем настройки из инспектора
+            // 3. ОТПРАВЛЯЕМ ЧИСТЫЙ ЗАПРОС
+            var requestEntity = em.CreateEntity(typeof(NetworkStreamRequestConnect));
+            em.SetComponentData(requestEntity, new NetworkStreamRequestConnect { Endpoint = endpoint });
 
-            var endpoint = NetworkEndpoint.Parse(ServerIP, ServerPort);
-            var entity = em.CreateEntity(typeof(NetworkStreamRequestConnect));
-            em.SetComponentData(entity, new NetworkStreamRequestConnect { Endpoint = endpoint });
-
-            Debug.Log($"[DotsBridge] Отправка запроса на подключение к {ServerIP}:{ServerPort}...");
-#endif
+            Debug.Log($"[DotsBridge] ОТПРАВЛЕН чистый запрос на подключение к {endpoint.Address}:{ServerPort}");
         }
 
         public void StartServer()
         {
-#if DOTSBRIDGE_NETCODE
             var serverWorld = GetWorld(WorldFlags.GameServer);
-            if (serverWorld == null) return;
-
-            var em = serverWorld.EntityManager;
-
-            if (!em.CreateEntityQuery(typeof(NetworkStreamRequestListen)).IsEmptyIgnoreFilter)
+            if (serverWorld == null)
             {
-                Debug.LogWarning("[DotsBridge] Сервер уже запущен!");
+                Debug.LogError("[DotsBridge] Серверный мир не найден!");
                 return;
             }
 
-            ApplyNetworkSettings(serverWorld); // Применяем настройки из инспектора
+            if (EntityBridge.ServerRegistry == null || EntityBridge.ServerRegistry.World != serverWorld)
+            {
+                EntityBridge.ServerRegistry = new BridgeRegistry(serverWorld);
+            }
+
+            var em = serverWorld.EntityManager;
+
+            // Защита от двойного клика по кнопке Start Server
+            var pendingRequests = em.CreateEntityQuery(typeof(NetworkStreamRequestListen));
+            em.DestroyEntity(pendingRequests);
 
             var endpoint = NetworkEndpoint.AnyIpv4.WithPort(ServerPort);
-            var entity = em.CreateEntity(typeof(NetworkStreamRequestListen));
-            em.SetComponentData(entity, new NetworkStreamRequestListen { Endpoint = endpoint });
+            var requestEntity = em.CreateEntity(typeof(NetworkStreamRequestListen));
+            em.SetComponentData(requestEntity, new NetworkStreamRequestListen { Endpoint = endpoint });
 
-            Debug.Log($"[DotsBridge] Сервер запущен на порту {ServerPort}.");
+            Debug.Log($"[DotsBridge] СЕРВЕР начинает слушать порт {ServerPort}");
             OnServerStarted?.Invoke();
-#endif
-        }
-
-        internal static void TriggerClientConnected()
-        {
-            OnClientConnected?.Invoke();
         }
 
         private World GetWorld(WorldFlags flag)
@@ -103,31 +147,5 @@ namespace DotsBridge.Modules.Network
             }
             return null;
         }
-#if DOTSBRIDGE_NETCODE
-        private void ApplyNetworkSettings(World world)
-        {
-            var em = world.EntityManager;
-
-            // Настраиваем только то, что есть в актуальной версии Netcode
-            var tickRateData = new ClientServerTickRate
-            {
-                SimulationTickRate = this.SimulationTickRate,
-                NetworkTickRate = this.NetworkTickRate
-            };
-
-            // В новых версиях Entities работа с синглтонами идет через Query
-            var query = em.CreateEntityQuery(typeof(ClientServerTickRate));
-
-            if (query.HasSingleton<ClientServerTickRate>())
-            {
-                query.SetSingleton(tickRateData);
-            }
-            else
-            {
-                var entity = em.CreateEntity(typeof(ClientServerTickRate));
-                em.SetComponentData(entity, tickRateData);
-            }
-        }
-#endif
     }
 }

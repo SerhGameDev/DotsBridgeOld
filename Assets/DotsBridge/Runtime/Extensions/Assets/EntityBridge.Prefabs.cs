@@ -5,49 +5,51 @@ using UnityEngine;
 namespace DotsBridge
 {
     public static partial class EntityBridge
-    {
-        private static DynamicBuffer<PrefabRegistryElement> _prefabBuffer;
-        private static bool _isPrefabBufferCached = false;
-
-        /// <summary>
-        /// Возвращает Entity-префаб из глобального контейнера по его строковому имени.
+    {        /// Если registry не указан, пытается найти в активном мире.
         /// </summary>
-        public static Entity GetPrefab(string name)
+
+        public static Entity GetPrefabServer(string name) => GetPrefab(name, ServerRegistry);
+        public static Entity GetPrefabClient(string name) => GetPrefab(name, ClientRegistry);
+
+        private static Entity GetPrefab(string name, BridgeRegistry registry)
         {
-            if (!_isPrefabBufferCached)
+            // Если реестр не передан, берем текущий активный (например, серверный по умолчанию)
+            var targetRegistry = registry ?? GetActiveRegistry();
+
+            if (targetRegistry == null)
             {
-                var query = Manager.CreateEntityQuery(typeof(PrefabRegistryElement));
+                Debug.LogError($"[DotsBridge] Не удалось найти активный Registry для поиска префаба '{name}'");
+                return Entity.Null;
+            }
+
+            // 1. Если префабы для ЭТОГО мира еще не в кэше — заполняем
+            if (!targetRegistry.IsPrefabBufferCached)
+            {
+                var query = targetRegistry.Manager.CreateEntityQuery(typeof(PrefabRegistryElement));
 
                 if (query.IsEmpty)
                 {
-                    UnityEngine.Debug.LogError("[DotsBridge] PrefabContainer не найден на сцене! Убедитесь, что объект с PrefabContainerAuthoring находится в SubScene.");
+                    Debug.LogError($"[DotsBridge] PrefabContainer не найден в мире {targetRegistry.World.Name}!");
                     return Entity.Null;
                 }
 
-                _prefabBuffer = query.GetSingletonBuffer<PrefabRegistryElement>(true);
-                _isPrefabBufferCached = true;
-            }
-
-            // 2. Ищем префаб по хэшу
-            int hash = GetHash(name);
-            foreach (var element in _prefabBuffer)
-            {
-                if (element.NameHash == hash)
+                var buffer = query.GetSingletonBuffer<PrefabRegistryElement>(true);
+                foreach (var element in buffer)
                 {
-                    return element.PrefabEntity;
+                    targetRegistry.Prefabs[element.NameHash] = element.PrefabEntity;
                 }
+                targetRegistry.IsPrefabBufferCached = true;
             }
 
-            UnityEngine.Debug.LogError($"[DotsBridge] Префаб с именем '{name}' не найден в контейнере!");
-            return Entity.Null;
-        }
+            // 2. Ищем в кэше конкретного реестра
+            int hash = GetHash(name);
+            if (targetRegistry.Prefabs.TryGetValue(hash, out var prefab))
+            {
+                return prefab;
+            }
 
-        /// <summary>
-        /// Сбрасывает кэш префабов (вызывать при смене сцены или перезапуске).
-        /// </summary>
-        public static void ClearPrefabCache()
-        {
-            _isPrefabBufferCached = false;
+            Debug.LogError($"[DotsBridge] Префаб '{name}' не найден в реестре {targetRegistry.World.Name}!");
+            return Entity.Null;
         }
     }
 }
