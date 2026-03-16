@@ -1,47 +1,23 @@
 using System;
 using Unity.Entities;
-using Unity.Plastic.Newtonsoft.Json.Linq;
 using UnityEngine;
 
 namespace DotsBridge
 {
     public static partial class EntityBridge
     {
-        // <summary>
-        /// Начинает процесс спавна префаба, используя клиентский реестр.
-        /// </summary>
-        /// <param name="namePrefab">Имя префаба в реестре.</param>
-        /// <returns>Строитель (Builder) для настройки параметров спавна.</returns>
-        public static SpawnerBuilder BeginSpawnForClient(string namePrefab)
-        {
-            return BeginSpawn(namePrefab, ClientRegistry);
-        }
-
-        /// <summary>
-        /// Начинает процесс спавна префаба, используя серверный реестр.
-        /// </summary>
-        /// <param name="namePrefab">Имя префаба в реестре.</param>
-        /// <returns>Строитель (Builder) для настройки параметров спавна.</returns>
-        public static SpawnerBuilder BeginSpawnForServer(string namePrefab)
-        {
-            return BeginSpawn(namePrefab, ServerRegistry);
-        }
-
         /// <summary>
         /// Внутренний метод инициализации спавна через конкретный реестр.
         /// </summary>
-        private static SpawnerBuilder BeginSpawn(string prefabName, BridgeRegistry registry)
+        private static SpawnerBuilder BeginSpawn(this BridgeWorld word, string prefabName)
         {
-            var targetRegistry = registry ?? GetActiveRegistry();
-
-            if (targetRegistry == null)
+            if (word == null)
             {
                 Debug.LogError($"[DotsBridge] Невозможно начать спавн '{prefabName}'. Реестр не инициализирован.");
                 return new SpawnerBuilder(null, Entity.Null);
             }
 
-            Entity prefab = GetPrefab(prefabName, targetRegistry);
-            return new SpawnerBuilder(targetRegistry, prefab);
+            return new SpawnerBuilder(word, GetPrefab(word, prefabName));
         }
 
 
@@ -49,20 +25,67 @@ namespace DotsBridge
         /// Вариант 1: Спавн "пустышки" на определенный временной промежуток.
         /// Создает пустую сущность и добавляет таймер уничтожения.
         /// </summary>
-        public static EntityBatch QuickSpawnEmpty(this EntityBatch batch, float duration)
+        public static ListEntity QuickSpawnEmpty(this ListEntity list, float duration = 1, int count = 1)
         {
-            batch.Manager.AddComponentData(batch.Create(), new DestroyTimer { Value = duration });
-            return batch;
+            if(count > 1)
+            {
+                list.CreateEmpty(count);
+                list.AddComponent(new DestroyTimer { Value = duration });
+            }
+            else if (duration == 0)
+            {
+                SpawnEmptyOneFrame(list);
+            }
+            else
+            {
+                Debug.LogWarning("[QuickSpawnEmpty] Попытка спауна меньше нуля entity");
+            }
+            return list;
+        }
+
+        /// <summary>
+        /// Вариант 1: Спавн "пустышки" на определенный временной промежуток.
+        /// Создает пустую сущность и добавляет таймер уничтожения.
+        /// </summary>
+        public static ListEntity QuickSpawnEmpty(this BridgeWorld world, float duration = 1, int count = 1)
+        {
+            var templist = new ListEntity(world);
+            if (count > 1)
+            {
+                templist.CreateEmpty(count);
+                templist.AddComponent(new DestroyTimer { Value = duration });
+            }
+            else if (duration == 0)
+            {
+                SpawnEmptyOneFrame(templist);
+            }
+            else
+            {
+                Debug.LogWarning("[QuickSpawnEmpty] Попытка спауна меньше нуля entity");
+            }
+            return templist;
         }
 
         /// <summary>
         /// Вариант 2: Спавн "пустышки" ровно на один кадр.
         /// Полезно для триггеров или событий, которые должны исчезнуть немедленно.
         /// </summary>
-        public static EntityBatch SpawnEmptyOneFrame(this EntityBatch batch)
+        public static ListEntity SpawnEmptyOneFrame(this ListEntity list)
         {
-            batch.Manager.AddComponentData(batch.Create(), new DestroyTimer { Value = 0 });
-            return batch;
+            list.CreateEmpty();
+            list.AddComponent(new DestroyTimer { Value = 0 });
+            return list;
+        }
+        /// <summary>
+        /// Вариант 2: Спавн "пустышки" ровно на один кадр.
+        /// Полезно для триггеров или событий, которые должны исчезнуть немедленно.
+        /// </summary>
+        public static ListEntity SpawnEmptyOneFrame(this BridgeWorld world)
+        {
+            var list = new ListEntity(world);
+            list.CreateEmpty();
+            list.AddComponent(new DestroyTimer { Value = 0 });
+            return list;
         }
     }
 }

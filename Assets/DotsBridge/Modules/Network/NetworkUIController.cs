@@ -1,54 +1,64 @@
-using UnityEngine;
-using UnityEngine.UI;
-using TMPro; // Используем TextMeshPro для красоты
+using DotsBridge;
+using DotsBridge.Modules.Network;
 using System.Net;
 using System.Net.Sockets;
-using DotsBridge.Modules.Network;
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
 
 public class NetworkUIController : MonoBehaviour
 {
     [Header("UI Elements")]
+    public TMP_InputField Nickname;
     public TMP_InputField IpInput;
     public TMP_InputField PortInput;
     public Button ConnectButton;
     public Button StartServerButton;
     public Button GetMyIpButton;
+    public DotsNetworkWrapper NetworkWrapper;
+
 
     private void Start()
     {
-        // Подтягиваем текущие значения из менеджера
-        if (DotsNetworkManager.Instance != null)
+        Nickname.text += "Player" + Random.Range(0, 9) + Random.Range(0, 9) + Random.Range(0, 9) + Random.Range(0, 9);
+        //EntityBridge.OnClientConnected += SetNickName;
+      
+        if (NetworkWrapper != null)
         {
-            IpInput.text = DotsNetworkManager.Instance.ServerIP;
-            PortInput.text = DotsNetworkManager.Instance.ServerPort.ToString();
+            IpInput.text = "127.0.0.1";
+            PortInput.text = "7979";
         }
 
-        // Подписываемся на кнопки
         ConnectButton.onClick.AddListener(OnConnectClick);
         StartServerButton.onClick.AddListener(OnStartServerClick);
         GetMyIpButton.onClick.AddListener(OnGetMyIpClick);
     }
 
+    private void SetNickName(SingleEntity entity, int arg2)
+    {
+        Debug.Log("Player" + arg2 + " Conected");
+    }
+
+
     private void OnConnectClick()
     {
-        // Обновляем данные в менеджере перед подключением
-        DotsNetworkManager.Instance.ServerIP = IpInput.text;
+        NetworkWrapper.ServerIP = IpInput.text;
         if (ushort.TryParse(PortInput.text, out ushort port))
         {
-            DotsNetworkManager.Instance.ServerPort = port;
+            NetworkWrapper.ServerPort = port;
         }
 
-        DotsNetworkManager.Instance.ConnectToServer();
+        DotsNetworkManager.ConnectClient(IpInput.text, port);
     }
 
     private void OnStartServerClick()
     {
         if (ushort.TryParse(PortInput.text, out ushort port))
         {
-            DotsNetworkManager.Instance.ServerPort = port;
+            NetworkWrapper.ServerPort = port;
         }
 
-        DotsNetworkManager.Instance.StartServer();
+        DotsNetworkManager.StartServer(port);
     }
 
     private void OnGetMyIpClick()

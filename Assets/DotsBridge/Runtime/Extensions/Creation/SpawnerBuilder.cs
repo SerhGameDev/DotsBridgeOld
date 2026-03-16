@@ -3,12 +3,13 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace DotsBridge
 {
     public struct SpawnerBuilder
     {
-        private BridgeRegistry _registry;
+        private BridgeWorld _world;
         private Entity _prefab;
         private int _count;
         private float3 _position;
@@ -16,19 +17,18 @@ namespace DotsBridge
         private float _scale;
         private string _idString;
 
-        // НОВОЕ: Храним ID владельца
         private int _ownerId;
 
-        public SpawnerBuilder(BridgeRegistry registry, Entity prefab)
+        public SpawnerBuilder(BridgeWorld world, Entity prefab)
         {
-            _registry = registry;
+            _world = world;
             _prefab = prefab;
             _count = 1;
             _position = float3.zero;
             _rotation = quaternion.identity;
             _scale = 1f;
             _idString = null;
-            _ownerId = 0; // 0 означает "нет владельца" (Сервер)
+            _ownerId = 0; 
         }
 
         public SpawnerBuilder SetId(string id) { _idString = id; return this; }
@@ -37,50 +37,38 @@ namespace DotsBridge
         public SpawnerBuilder SetRotation(Quaternion rotation) { _rotation = rotation; return this; }
         public SpawnerBuilder SetScale(float scale) { _scale = scale; return this; }
 
-        // НОВОЕ: Метод для установки владельца
         public SpawnerBuilder SetOwner(int clientId) { _ownerId = clientId; return this; }
-
+     
         public DotsCommand Spawn(string commandName = "SpawnCommand")
         {
             var command = new DotsCommand(commandName);
 
-            var registry = _registry;
+            var world = _world;
             var prefab = _prefab;
             var count = _count;
-            var pos = _position;
-            var rot = _rotation;
+            var position = _position;
+            var rotation = _rotation;
             var scale = _scale;
             var id = _idString;
-            var owner = _ownerId; // Кэшируем для лямбды
+            var owner = _ownerId;
 
             command.SetTargetResolver(() =>
             {
-                var manager = registry.Manager;
-                if (prefab == Entity.Null) return new EntityBatch(default, manager);
-
-                NativeList<Entity> spawnedEntities = new NativeList<Entity>(count, Allocator.TempJob);
-                using (var tempArray = new NativeArray<Entity>(count, Allocator.Temp))
+                var localTramsforrm = new LocalTransform()
                 {
-                    manager.Instantiate(prefab, tempArray);
-                    spawnedEntities.AddRange(tempArray);
-                }
+                    Position = position,
+                    Rotation = rotation,
+                    Scale = scale,
+                };
 
                 int idHash = string.IsNullOrEmpty(id) ? 0 : EntityBridge.GetHash(id);
-                var transform = LocalTransform.FromPositionRotationScale(pos, rot, scale);
 
-                foreach (var entity in spawnedEntities)
-                {
-                    manager.SetComponentData(entity, transform);
-
-                    if (idHash != 0)
-                        manager.AddComponentData(entity, new BridgeIdentity { Hash = idHash });
-
-                    // НОВОЕ: Если владелец указан, вешаем компонент
-                    if (owner != 0)
-                        manager.AddComponentData(entity, new BridgeOwner { ClientId = owner });
-                }
-
-                return new EntityBatch(spawnedEntities, manager);
+                var spawnedEntities = new ListEntity(world);
+                spawnedEntities.Instantiate(prefab, count);
+                spawnedEntities.AddComponent(localTramsforrm);
+                spawnedEntities.AddComponent(new BridgeIdentity { Hash = idHash });
+                spawnedEntities.AddComponent(new BridgeOwner { ClientId = idHash });
+                return new ListEntity(world);
             }, true);
 
             return command;
@@ -90,8 +78,7 @@ namespace DotsBridge
         {
             if (_prefab == Entity.Null) return;
 
-            Entity requestEntity = _registry.Manager.CreateEntity(typeof(SpawnRequest));
-            _registry.Manager.SetComponentData(requestEntity, new SpawnRequest
+            SingleEntity.CreateEmpty(_world).AddComponent( new SpawnRequest
             {
                 Prefab = _prefab,
                 Count = _count,
@@ -99,7 +86,7 @@ namespace DotsBridge
                 Rotation = _rotation,
                 Scale = _scale,
                 ID = string.IsNullOrEmpty(_idString) ? 0 : EntityBridge.GetHash(_idString),
-                OwnerID = _ownerId // Передаем в запрос
+                OwnerID = _ownerId
             });
         }
     }

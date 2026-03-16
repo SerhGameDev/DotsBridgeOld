@@ -1,104 +1,74 @@
 using System;
 using Unity.Entities;
-using UnityEngine;
-using static Unity.Burst.Intrinsics.X86.Avx;
+using Unity.Collections;
 
 namespace DotsBridge
 {
     public static partial class EntityBridge
     {
+
         /// <summary>
-        /// Добавляет компонент DeathEvent к сущностям и сразу его ВЫКЛЮЧАЕТ.
-        /// Идеально вызывать сразу после Spawn().
+        /// Подготавливает сущности к смерти: добавляет DeathEvent и выключает его.
         /// </summary>
-        public static EntityBatch AddDeathEvent(this EntityBatch batch)
+        public static ListEntity AddDeathEvent(this ListEntity batch)
         {
+            if (batch.Count == 0) return batch;
+
+            // Массовое добавление компонента
             batch.Manager.AddComponent<DeathEvent>(batch.Entities.AsArray());
 
-            // Сразу переводим в спящий режим
-            foreach (var entity in batch.Entities)
-            {
-                batch.Manager.SetComponentEnabled<DeathEvent>(entity, false);
-            }
-            return batch;
+            // Выключаем компоненты (используем встроенный метод ListEntity для чистоты)
+            return batch.SetEnabled<DeathEvent>(false);
         }
 
-        public static DotsCommand AddDeathEvent(this DotsCommand cmd) => cmd.Do(b => b.AddDeathEvent());
-
         /// <summary>
-        /// Триггер смерти: ВКЛЮЧАЕТ DeathEvent. 
-        /// Сущность будет жить до конца текущего кадра, позволяя другим системам отреагировать.
+        /// Активирует DeathEvent. Сущность "умрет" для систем в конце кадра.
         /// </summary>
-        public static EntityBatch TriggerDeath(this EntityBatch batch)
+        public static ListEntity TriggerDeath(this ListEntity batch)
         {
-            foreach (var entity in batch.Entities)
-            {
-                batch.Manager.SetComponentEnabled<DeathEvent>(entity, true);
-            }
-            return batch;
+            return batch.SetEnabled<DeathEvent>(true);
         }
 
-        public static DotsCommand TriggerDeath(this DotsCommand cmd) => cmd.Do(b => b.TriggerDeath());
-
-
         /// <summary>
-        /// [DOTS] Указывает, какой Entity-префаб заспавнить на месте этой сущности при ее смерти (партиклы/взрыв).
+        /// Назначает префаб, который заспавнится при смерти (взрыв, обломки и т.д.).
         /// </summary>
-        public static EntityBatch SetSpawnOnDeath(this EntityBatch batch, Entity prefabToSpawn)
+        public static ListEntity SetSpawnOnDeath(this ListEntity batch, Entity prefabToSpawn)
         {
+            if (batch.Count == 0 || prefabToSpawn == Entity.Null) return batch;
+
             batch.Manager.AddComponent<SpawnOnDeath>(batch.Entities.AsArray());
-            foreach (var entity in batch.Entities)
+
+            // Записываем данные (используем наш оптимизированный SetComponent из ListEntity)
+            return batch.AddComponent(new SpawnOnDeath { Prefab = prefabToSpawn });
+        }
+
+        // =========================================================
+        // OOP CALLBACKS (BRIDGE)
+        // =========================================================
+
+        /// <summary>
+        /// Подписывает C# метод на уничтожение сущностей. 
+        /// Реестр выбирается автоматически на основе мира, в котором живут сущности.
+        /// </summary>
+        public static ListEntity SubscribeOnDeath(this ListEntity batch, Action<Entity> onDeathAction)
+        {
+            if (batch.Count == 0 || onDeathAction == null || batch.Word == null) return batch;
+
+            var events = batch.Word.OnDestroyEvents;
+
+            for (int i = 0; i < batch.Entities.Length; i++)
             {
-                batch.Manager.SetComponentData(entity, new SpawnOnDeath { Prefab = prefabToSpawn });
-            }
-            return batch;
-        }
-
-        public static DotsCommand SetSpawnOnDeath(this DotsCommand cmd, Entity prefab) => cmd.Do(b => b.SetSpawnOnDeath(prefab));
-
-
-        /// <summary>
-        /// [OOP Bridge] Подписывает классический C# метод на событие смерти этих сущностей.
-        /// Безопасно для мультиплеера: подписка сохраняется в реестре конкретного мира.
-        /// </summary>
-        public static EntityBatch SubscribeOnDeathForServer(this EntityBatch batch, Action<Entity> onDeathAction)
-        {
-            return SubscribeOnDeath(batch, onDeathAction, ServerRegistry);
-        }
-        /// <summary>
-        /// [OOP Bridge] Подписывает классический C# метод на событие смерти этих сущностей.
-        /// Безопасно для мультиплеера: подписка сохраняется в реестре конкретного мира.
-        /// </summary>
-        public static EntityBatch SubscribeOnDeathForClient(this EntityBatch batch, Action<Entity> onDeathAction)
-        {
-            return SubscribeOnDeath(batch, onDeathAction, ClientRegistry);
-        }
-
-        /// <summary>
-        /// [OOP Bridge] Подписывает классический C# метод на событие смерти этих сущностей.
-        /// Безопасно для мультиплеера: подписка сохраняется в реестре конкретного мира.
-        /// </summary>
-        public static EntityBatch SubscribeOnDeath(this EntityBatch batch, Action<Entity> onDeathAction, BridgeRegistry registry )
-        {
-            if (registry == null) return batch;
-
-            foreach (var entity in batch.Entities)
-            {
-                if (registry.OnDestroyEvents.ContainsKey(entity))
+                var entity = batch.Entities[i];
+                if (events.ContainsKey(entity))
                 {
-                    registry.OnDestroyEvents[entity] += onDeathAction;
+                    events[entity] += onDeathAction;
                 }
                 else
                 {
-                    registry.OnDestroyEvents[entity] = onDeathAction;
+                    events[entity] = onDeathAction;
                 }
             }
             return batch;
         }
-
-        public static DotsCommand SubscribeOnDeathForClient(this DotsCommand cmd, Action<Entity> onDeathAction) => cmd.Do(b => b.SubscribeOnDeath(onDeathAction, ClientRegistry));
-
-        public static DotsCommand SubscribeOnDeathForServer(this DotsCommand cmd, Action<Entity> onDeathAction) => cmd.Do(b => b.SubscribeOnDeath(onDeathAction, ServerRegistry));
-
     }
 }

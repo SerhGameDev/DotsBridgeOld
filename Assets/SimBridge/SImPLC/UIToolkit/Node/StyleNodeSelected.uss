@@ -1,0 +1,9 @@
+
+
+.node-selected {
+    border-bottom-color: rgb(241, 178, 26);
+    border-top-width: 2px;
+    border-right-width: 2px;
+    border-bottom-width: 2px;
+    border-left-width: 2px;
+}

@@ -1,33 +1,48 @@
-﻿using DotsBridge;
-using Unity.Burst;
+﻿using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 
-[UpdateInGroup(typeof(InitializationSystemGroup))]
-[BurstCompile]
-public partial struct IdMapSystem : ISystem
+namespace DotsBridge
 {
-    public NativeParallelMultiHashMap<int, Entity> EntityMap;
-
-    public void OnCreate(ref SystemState state)
-    {
-        EntityMap = new NativeParallelMultiHashMap<int, Entity>(1000, Allocator.Persistent);
-        state.RequireForUpdate<EntityIdComponent>();
-    }
-
-    public void OnDestroy(ref SystemState state)
-    {
-        if (EntityMap.IsCreated) EntityMap.Dispose();
-    }
-
+    [UpdateInGroup(typeof(InitializationSystemGroup))]
     [BurstCompile]
-    public void OnUpdate(ref SystemState state)
+    public partial struct IdMapSystem : ISystem
     {
-        EntityMap.Clear();
+        public NativeParallelMultiHashMap<int, Entity> EntityMap;
 
-        foreach (var (id, entity) in SystemAPI.Query<RefRO<EntityIdComponent>>().WithEntityAccess())
+        public void OnCreate(ref SystemState state)
         {
-            EntityMap.Add(id.ValueRO.Hash, entity);
+            EntityMap = new NativeParallelMultiHashMap<int, Entity>(100, Allocator.Persistent);
+            state.RequireForUpdate<EntityIdComponent>();
+        }
+
+        public void OnDestroy(ref SystemState state)
+        {
+            if (EntityMap.IsCreated) EntityMap.Dispose();
+        }
+
+        [BurstCompile]
+        public void OnUpdate(ref SystemState state)
+        {
+            EntityMap.Clear();
+
+            var job = new FillMapJob
+            {
+                MapWriter = EntityMap.AsParallelWriter()
+            };
+
+            state.Dependency = job.ScheduleParallel(state.Dependency);
+        }
+
+        [BurstCompile]
+        public partial struct FillMapJob : IJobEntity
+        {
+            public NativeParallelMultiHashMap<int, Entity>.ParallelWriter MapWriter;
+
+            private void Execute(Entity entity, in EntityIdComponent idComponent)
+            {
+                MapWriter.Add(idComponent.Hash, entity);
+            }
         }
     }
 }

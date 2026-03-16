@@ -1,151 +1,92 @@
 using System;
-using UnityEngine;
 using Unity.Entities;
-
 using Unity.NetCode;
 using Unity.Networking.Transport;
+using UnityEngine;
 
 namespace DotsBridge.Modules.Network
 {
-    public class DotsNetworkManager : MonoBehaviour
+    public enum Role
     {
-        public static DotsNetworkManager Instance { get; private set; }
+        ServerClient = 0, // Host
+        Server = 1,       // Dedicated Server
+        Client = 2,       // Pure Client
+    }
 
-        [Header("Singleton Settings")]
-        public bool IsSingleton = true;
+    /// <summary>
+    /// Статическое ядро для управления сетевыми мирами DOTS.
+    /// </summary>
+    public static class DotsNetworkManager
+    {
+        public static Role CurrentRole { get; private set; }
 
-        [Header("Connection Settings")]
-        public string ServerIP = "127.0.0.1";
-        public ushort ServerPort = 7979;
+        // События. Передаем World, чтобы подписчики сразу могли получить к нему доступ.
 
-        [Header("Tick Rate Settings")]
-        public int SimulationTickRate = 30;
-        public int NetworkTickRate = 30;
-        public int MaxBatchedTicks = 5;
 
-        [Header("Settings")]
-        public bool IsAutoStartServer;
-
-        public static event Action OnClientConnected;
-        public static event Action OnServerStarted;
-
-        private void Awake()
+        /// <summary>
+        /// Создает серверный мир и начинает прослушивание порта.
+        /// </summary>
+        public static void StartServer(ushort port)
         {
-            Application.targetFrameRate = 60;
-            QualitySettings.vSyncCount = 1;
-            Application.runInBackground = true;
-            SetupSingleton();
-        }
-        private void SetupSingleton()
-        {
-            if (!IsSingleton) return;
+            CurrentRole = Role.Server;
+            DestroyDefaultWorld();
 
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-            Instance = this;
-            // Раскомментируйте, если нужно сохранять между сценами:
-            // DontDestroyOnLoad(gameObject); 
+            var serverWorld = ClientServerBootstrap.CreateServerWorld("ServerWorld");
+            World.DefaultGameObjectInjectionWorld = serverWorld;
+
+            using var query = serverWorld.EntityManager.CreateEntityQuery(ComponentType.ReadWrite<NetworkStreamDriver>());
+            query.GetSingletonRW<NetworkStreamDriver>().ValueRW.Listen(NetworkEndpoint.AnyIpv4.WithPort(port));
+
+            Debug.Log($"[DotsNetworkManager] Сервер запущен на порту {port}");
         }
 
-        private void Start()
+        /// <summary>
+        /// Создает клиентский мир и инициирует подключение к серверу.
+        /// </summary>
+        public static void ConnectClient(string ip, ushort port)
         {
+            if (CurrentRole != Role.ServerClient)
+                CurrentRole = Role.Client;
 
-            if (IsAutoStartServer)
-                StartServer();
+            if (CurrentRole == Role.Client)
+                DestroyDefaultWorld();
+
+            var clientWorld = ClientServerBootstrap.CreateClientWorld("ClientWorld");
+
+            if (CurrentRole == Role.Client)
+                World.DefaultGameObjectInjectionWorld = clientWorld;
+
+            var endpoint = NetworkEndpoint.Parse(ip, port);
+
+            using var query = clientWorld.EntityManager.CreateEntityQuery(ComponentType.ReadWrite<NetworkStreamDriver>());
+            query.GetSingletonRW<NetworkStreamDriver>().ValueRW.Connect(clientWorld.EntityManager, endpoint);
+
+            Debug.Log($"[DotsNetworkManager] Клиент инициировал подключение к {ip}:{port}");
         }
 
-        private void OnDestroy()
+        /// <summary>
+        /// Запускает и сервер, и клиента (режим Host).
+        /// </summary>
+        public static void StartHost(string ip, ushort port)
         {
-            if (Instance == this) Instance = null;
-
-            // Здесь ваша логика очистки реестров
-            // EntityBridge.ServerRegistry = null;
-            // EntityBridge.ClientRegistry = null;
-        }
-        internal static void TriggerClientConnected()
-        {
-            OnClientConnected?.Invoke();
-        }
-        public void ConnectToServer()
-        {
-            var clientWorld = GetWorld(WorldFlags.GameClient);
-            if (clientWorld == null)
-            {
-                Debug.LogError("[DotsBridge] Клиентский мир не найден! Убедитесь, что в NetCode Config создан клиент.");
-                return;
-            }
-
-            if (EntityBridge.ClientRegistry == null || EntityBridge.ClientRegistry.World != clientWorld)
-            {
-                EntityBridge.ClientRegistry = new BridgeRegistry(clientWorld);
-            }
-
-            var em = clientWorld.EntityManager;
-
-            // 1. УБИРАЕМ "МУСОР"
-            // Уничтожаем все старые зависшие запросы на коннект, оставшиеся от автоматических попыток Unity
-            var pendingRequests = em.CreateEntityQuery(typeof(NetworkStreamRequestConnect));
-            em.DestroyEntity(pendingRequests);
-
-            // 2. БЕЗОПАСНЫЙ ПАРСИНГ IP
-            ServerIP = ServerIP.Trim(); // Убираем случайные пробелы из UI
-            NetworkEndpoint endpoint;
-
-            if (ServerIP == "127.0.0.1" || ServerIP.ToLower() == "localhost")
-            {
-                endpoint = NetworkEndpoint.LoopbackIpv4.WithPort(ServerPort);
-            }
-            else if (!NetworkEndpoint.TryParse(ServerIP, ServerPort, out endpoint))
-            {
-                Debug.LogError($"[DotsBridge] Ошибка: Неверный формат IP адреса: '{ServerIP}'");
-                return;
-            }
-
-            // 3. ОТПРАВЛЯЕМ ЧИСТЫЙ ЗАПРОС
-            var requestEntity = em.CreateEntity(typeof(NetworkStreamRequestConnect));
-            em.SetComponentData(requestEntity, new NetworkStreamRequestConnect { Endpoint = endpoint });
-
-            Debug.Log($"[DotsBridge] ОТПРАВЛЕН чистый запрос на подключение к {endpoint.Address}:{ServerPort}");
+            CurrentRole = Role.ServerClient;
+            StartServer(port);
+            ConnectClient(ip, port);
         }
 
-        public void StartServer()
-        {
-            var serverWorld = GetWorld(WorldFlags.GameServer);
-            if (serverWorld == null)
-            {
-                Debug.LogError("[DotsBridge] Серверный мир не найден!");
-                return;
-            }
-
-            if (EntityBridge.ServerRegistry == null || EntityBridge.ServerRegistry.World != serverWorld)
-            {
-                EntityBridge.ServerRegistry = new BridgeRegistry(serverWorld);
-            }
-
-            var em = serverWorld.EntityManager;
-
-            // Защита от двойного клика по кнопке Start Server
-            var pendingRequests = em.CreateEntityQuery(typeof(NetworkStreamRequestListen));
-            em.DestroyEntity(pendingRequests);
-
-            var endpoint = NetworkEndpoint.AnyIpv4.WithPort(ServerPort);
-            var requestEntity = em.CreateEntity(typeof(NetworkStreamRequestListen));
-            em.SetComponentData(requestEntity, new NetworkStreamRequestListen { Endpoint = endpoint });
-
-            Debug.Log($"[DotsBridge] СЕРВЕР начинает слушать порт {ServerPort}");
-            OnServerStarted?.Invoke();
-        }
-
-        private World GetWorld(WorldFlags flag)
+        /// <summary>
+        /// Уничтожает стандартный пустой мир, созданный Unity при запуске.
+        /// </summary>
+        private static void DestroyDefaultWorld()
         {
             foreach (var world in World.All)
             {
-                if (world.IsCreated && world.Flags.HasFlag(flag)) return world;
+                if (world.Flags == WorldFlags.Game)
+                {
+                    world.Dispose();
+                    break;
+                }
             }
-            return null;
         }
     }
 }

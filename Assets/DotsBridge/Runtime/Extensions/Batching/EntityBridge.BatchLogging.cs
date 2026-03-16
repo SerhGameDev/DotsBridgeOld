@@ -30,7 +30,7 @@ namespace DotsBridge
         /// Скорость: Мгновенно (O(1)).
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static EntityBatch LogCount(this EntityBatch batch, BridgeLogType logType = BridgeLogType.Normal, string customMessage = "")
+        public static ListEntity LogCount(this ListEntity batch, BridgeLogType logType = BridgeLogType.Normal, string customMessage = "")
         {
             PrintLog(logType, "Количество сущностей: " + batch.Count() + ", " + customMessage);
             return batch; // Возвращаем batch для поддержки цепочек вызовов (Fluent API)
@@ -41,7 +41,7 @@ namespace DotsBridge
         /// Скорость: Мгновенно (O(1)).
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static EntityBatch LogIfCountGreaterThan(this EntityBatch batch, int threshold, BridgeLogType logType = BridgeLogType.Normal, string customMessage = "")
+        public static ListEntity LogIfCountGreaterThan(this ListEntity batch, int threshold, BridgeLogType logType = BridgeLogType.Normal, string customMessage = "")
         {
             int count = batch.Count();
             if (count > threshold)
@@ -60,7 +60,7 @@ namespace DotsBridge
         /// Скорость: Мгновенно (O(1)).
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static EntityBatch LogIfCountLessOrEqualZero(this EntityBatch batch, BridgeLogType logType = BridgeLogType.Warning, string customMessage = "")
+        public static ListEntity LogIfCountLessOrEqualZero(this ListEntity batch, BridgeLogType logType = BridgeLogType.Warning, string customMessage = "")
         {
             int count = batch.Count();
             if (count <= 0)
@@ -79,7 +79,7 @@ namespace DotsBridge
         /// ВНИМАНИЕ: Вызывает Sync Point для безопасного чтения.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static EntityBatch LogIfComponentCountGreaterThan<T>(this EntityBatch batch, int threshold, BridgeLogType logType = BridgeLogType.Normal, string customMessage = "") where T : unmanaged, IComponentData
+        public static ListEntity LogIfComponentCountGreaterThan<T>(this ListEntity batch, int threshold, BridgeLogType logType = BridgeLogType.Normal, string customMessage = "") where T : unmanaged, IComponentData
         {
             if (batch.Entities.IsEmpty) return batch;
 
@@ -110,7 +110,7 @@ namespace DotsBridge
         /// ВНИМАНИЕ: Вызывает Sync Point для безопасного чтения.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static EntityBatch LogIfComponentCountLessOrEqualZero<T>(this EntityBatch batch, BridgeLogType logType = BridgeLogType.Warning, string customMessage = "") where T : unmanaged, IComponentData
+        public static ListEntity LogIfComponentCountLessOrEqualZero<T>(this ListEntity batch, BridgeLogType logType = BridgeLogType.Warning, string customMessage = "") where T : unmanaged, IComponentData
         {
             if (batch.Entities.IsEmpty)
             {

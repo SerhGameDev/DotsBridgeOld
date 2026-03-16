@@ -1,17 +1,34 @@
 ﻿<Solution>
+  <Project Path="UniTask.csproj" />
+  <Project Path="Linework.csproj" />
   <Project Path="QFSW.QC.Extras.csproj" />
   <Project Path="DotsBridge.csproj" />
   <Project Path="QFSW.QC.csproj" />
+  <Project Path="UniTask.Linq.csproj" />
+  <Project Path="Assembly-CSharp.csproj" />
   <Project Path="QFSW.QC.Grammar.csproj" />
   <Project Path="QFSW.QC.Editor.csproj" />
-  <Project Path="Assembly-CSharp.csproj" />
   <Project Path="QFSW.QC.Parsers.csproj" />
+  <Project Path="Linework.Editor.csproj" />
+  <Project Path="Unity.Physics.Custom.csproj" />
+  <Project Path="Unity.Physics.Custom.Editor.csproj" />
+  <Project Path="UniTask.Addressables.csproj" />
   <Project Path="QFSW.QC.Editor.Tools.csproj" />
+  <Project Path="SimVent.csproj" />
+  <Project Path="Tests.csproj" />
+  <Project Path="SimElectric.csproj" />
   <Project Path="QFSW.QC.Serializers.csproj" />
+  <Project Path="UniTask.TextMeshPro.csproj" />
+  <Project Path="SimBridge.csproj" />
   <Project Path="QFSW.QC.QGUI.csproj" />
   <Project Path="QFSW.QC.UI.csproj" />
   <Project Path="QFSW.QC.Suggestors.csproj" />
   <Project Path="QFSW.QC.Demo.csproj" />
+  <Project Path="Assembly-CSharp-Editor.csproj" />
+  <Project Path="UniTask.Editor.csproj" />
+  <Project Path="Sirenix.OdinInspector.Modules.UnityMathematics.csproj" />
   <Project Path="QFSW.QC.ScanRules.csproj" />
+  <Project Path="UniTask.DOTween.csproj" />
+  <Project Path="Assembly-CSharp-firstpass.csproj" />
   <Project Path="Editor.csproj" />
 </Solution>

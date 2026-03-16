@@ -7,7 +7,7 @@ namespace DotsBridge
         /// <summary>
         /// Добавляет компонент таймера смерти ко всем сущностям в батче.
         /// </summary>
-        public static EntityBatch SetDestroyTimer(this EntityBatch batch, float lifetime)
+        public static ListEntity SetDestroyTimer(this ListEntity batch, float lifetime)
         {
             // Пакетное добавление компонента (максимально быстро)
             batch.Manager.AddComponent<DestroyTimer>(batch.Entities.AsArray());

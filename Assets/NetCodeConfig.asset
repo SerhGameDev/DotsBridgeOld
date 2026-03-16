@@ -15,9 +15,9 @@ MonoBehaviour:
   IsGlobalConfig: 0
   EnableClientServerBootstrap: 0
   ClientServerTickRate:
-    SimulationTickRate: 60
+    SimulationTickRate: 30
     PredictedFixedStepSimulationTickRatio: 1
-    NetworkTickRate: 60
+    NetworkTickRate: 30
     MaxSimulationStepsPerFrame: 1
     MaxSimulationStepBatchSize: 4
     TargetFrameRateMode: 0

@@ -12,7 +12,7 @@ namespace DotsBridge
      /// Скорость (Immediate): Очень медленно (остановка потоков и перестроение памяти). Не использовать в Update!
      /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static EntityBatch AddComponent<T>(this EntityBatch batch, ApplyMode mode = ApplyMode.Deferred) where T : unmanaged, IComponentData
+        public static ListEntity AddComponent<T>(this ListEntity batch, ApplyMode mode = ApplyMode.Deferred) where T : unmanaged, IComponentData
         {
             if (batch.Entities.IsEmpty) return batch;
 
@@ -42,7 +42,7 @@ namespace DotsBridge
         /// Скорость (Immediate): Очень медленно (остановка потоков и перестроение памяти). Не использовать в Update!
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static EntityBatch RemoveComponent<T>(this EntityBatch batch, ApplyMode mode = ApplyMode.Deferred) where T : unmanaged, IComponentData
+        public static ListEntity RemoveComponent<T>(this ListEntity batch, ApplyMode mode = ApplyMode.Deferred) where T : unmanaged, IComponentData
         {
             if (batch.Entities.IsEmpty) return batch;
 
@@ -71,7 +71,7 @@ namespace DotsBridge
         /// Скорость (Immediate): Вызывает Sync Point. Рекомендуется только для событий.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static EntityBatch SetEnabled<T>(this EntityBatch batch, bool isEnabled, ApplyMode mode = ApplyMode.Deferred)
+        public static ListEntity SetEnabled<T>(this ListEntity batch, bool isEnabled, ApplyMode mode = ApplyMode.Deferred)
             where T : unmanaged, IComponentData, IEnableableComponent
         {
             if (batch.Entities.IsEmpty) return batch;
@@ -114,7 +114,7 @@ namespace DotsBridge
         /// Включает компонент (IEnableableComponent).
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static EntityBatch EnableComponent<T>(this EntityBatch batch, ApplyMode mode = ApplyMode.Deferred)
+        public static ListEntity EnableComponent<T>(this ListEntity batch, ApplyMode mode = ApplyMode.Deferred)
             where T : unmanaged, IComponentData, IEnableableComponent
         {
             return batch.SetEnabled<T>(true, mode);
@@ -124,7 +124,7 @@ namespace DotsBridge
         /// Выключает компонент (IEnableableComponent).
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static EntityBatch DisableComponent<T>(this EntityBatch batch, ApplyMode mode = ApplyMode.Deferred)
+        public static ListEntity DisableComponent<T>(this ListEntity batch, ApplyMode mode = ApplyMode.Deferred)
             where T : unmanaged, IComponentData, IEnableableComponent
         {
             return batch.SetEnabled<T>(false, mode);
@@ -138,7 +138,7 @@ namespace DotsBridge
         /// Лимит: Около 10 000 - 50 000 объектов. Идеально для событий и UI. Не использовать для тяжелой математики каждый кадр.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void ForEach<T>(this EntityBatch batch, Action<Entity, T> action) where T : unmanaged, IComponentData
+        public static void ForEach<T>(this ListEntity batch, Action<Entity, T> action) where T : unmanaged, IComponentData
         {
             if (batch.Entities.IsEmpty) return;
 
@@ -174,7 +174,7 @@ namespace DotsBridge
         /// Лимит: ~10 000 объектов. Идеально для разового применения урона, баффов или лечения.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static EntityBatch Modify<T>(this EntityBatch batch, RefAction<T> action, ApplyMode mode = ApplyMode.Deferred)
+        public static ListEntity Modify<T>(this ListEntity batch, RefAction<T> action, ApplyMode mode = ApplyMode.Deferred)
             where T : unmanaged, IComponentData
         {
             if (batch.Entities.IsEmpty) return batch;

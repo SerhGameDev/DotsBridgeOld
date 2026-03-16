@@ -7,7 +7,7 @@ namespace DotsBridge
         /// <summary>
         /// Помечает сущности на удаление (будут уничтожены в конце кадра системным сборщиком).
         /// </summary>
-        public static EntityBatch Destroy(this EntityBatch batch)
+        public static ListEntity Destroy(this ListEntity batch)
         {
             if (batch.Entities.IsCreated && batch.Entities.Length > 0)
             {

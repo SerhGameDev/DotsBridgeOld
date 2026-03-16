@@ -12,7 +12,7 @@ namespace DotsBridge
         /// Лимит: Отсутствует. Можно вызывать сколько угодно раз за кадр.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool HasComponent<T>(this EntityBatch batch) where T : unmanaged, IComponentData
+        public static bool HasComponent<T>(this ListEntity batch) where T : unmanaged, IComponentData
         {
             if (batch.Entities.IsEmpty) return false;
 
@@ -27,7 +27,7 @@ namespace DotsBridge
         /// Лимит: Использовать для проверок состояний (например, жив ли игрок, в стане ли он).
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsComponentEnabled<T>(this EntityBatch batch)
+        public static bool IsComponentEnabled<T>(this ListEntity batch)
             where T : unmanaged, IComponentData, IEnableableComponent
         {
             if (batch.Entities.IsEmpty) return false;
@@ -45,7 +45,7 @@ namespace DotsBridge
         /// Лимит: Отсутствует. Идеально подходит для проверок в Update.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int Count(this EntityBatch batch)
+        public static int Count(this ListEntity batch)
         {
             if (batch.Entities.IsEmpty) return 0;
 
@@ -57,7 +57,7 @@ namespace DotsBridge
         /// Скорость: Мгновенно (O(1)). Не вызывает Sync Point.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsEmpty(this EntityBatch batch)
+        public static bool IsEmpty(this ListEntity batch)
         {
             return batch.Entities.IsEmpty || batch.Entities.Length == 0;
         }

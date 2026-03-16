@@ -4,8 +4,6 @@ using Unity.Transforms;
 
 namespace DotsBridge.Modules.Movement
 {
-    // Обязательно указываем, что система работает в мультиплеере!
-    [WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation | WorldSystemFilterFlags.ServerSimulation)]
     public partial struct MovementTransformSystem : ISystem
     {
         [BurstCompile]

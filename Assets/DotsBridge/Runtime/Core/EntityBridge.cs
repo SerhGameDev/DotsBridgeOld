@@ -8,35 +8,9 @@ namespace DotsBridge
 {
     public static partial class EntityBridge
     {
-        public static World World => World.DefaultGameObjectInjectionWorld;
-        public static EntityManager Manager => World.EntityManager;
-
-        public static BridgeContext Server => new BridgeContext(ServerRegistry);
-        public static BridgeContext Client => new BridgeContext(ClientRegistry); 
-        public static BridgeContext Local => new BridgeContext(ServerRegistry);
-        internal static BridgeRegistry ServerRegistry;
-        internal static BridgeRegistry ClientRegistry;
-
-        // Словарь для хранения зарегистрированных команд
         private static readonly Dictionary<int, DotsCommand> _commandRegistry = new Dictionary<int, DotsCommand>();
 
         public static int GetHash(string id) => new FixedString32Bytes(id).GetHashCode();
-        // Вспомогательный метод для определения "кто сейчас главный"
-        private static BridgeRegistry GetActiveRegistry()
-        {
-            if (ServerRegistry != null) return ServerRegistry;
-            if (ClientRegistry != null) return ClientRegistry;
-            return null;
-        }
-
-        /// <summary>
-        /// Сбрасывает кэш для всех миров (например, при смене сцены)
-        /// </summary>
-        public static void ClearPrefabCache()
-        {
-            if (ServerRegistry != null) ServerRegistry.IsPrefabBufferCached = false;
-            if (ClientRegistry != null) ClientRegistry.IsPrefabBufferCached = false;
-        }
 
         /// <summary>
         /// Выполняет заранее зарегистрированную команду по её имени.
