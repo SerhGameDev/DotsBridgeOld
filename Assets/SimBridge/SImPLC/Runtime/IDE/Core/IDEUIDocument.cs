@@ -10,10 +10,11 @@ namespace IDE
         [SerializeField] private VisualTreeAsset _hierarchyWindowTemplate;
         [SerializeField] private VisualTreeAsset _fileTemplate;
         [SerializeField] private VisualTreeAsset _folderTemplate;
-
+        [SerializeField] private VisualTreeAsset _contextMenuTemplate;
+        [SerializeField] private VisualTreeAsset _contextMenuItemTemplate;
         private IDEUIView _uiView;
         private Hierarchy _hierarchyModel;
-
+        private HierarchyContextMenu _contextMenu;
         private void OnEnable()
         {
             var uiDocument = GetComponent<UIDocument>();
@@ -25,7 +26,8 @@ namespace IDE
 
             _hierarchyModel.OnFileOpened += OnFileOpened;
             _hierarchyModel.OnSelectionChanged += OnSelectionChanged;
-
+            _contextMenu = new HierarchyContextMenu(root, _contextMenuTemplate, _contextMenuItemTemplate, _hierarchyModel);
+            _hierarchyModel.OnItemContextRequested += HandleContextRequested;
             PopulateTestData();
         }
 
@@ -37,6 +39,10 @@ namespace IDE
             _hierarchyModel.CreateFile("WeaponNode", mainFolderId);
 
             _hierarchyModel.CreateFile("GameManagerNode");
+        }
+        private void HandleContextRequested(string id, Vector2 position)
+        {
+            _contextMenu.ShowContextMenu(position, id);
         }
 
         private void OnFileOpened(string id)
@@ -56,8 +62,11 @@ namespace IDE
                 _hierarchyModel.OnFileOpened -= OnFileOpened;
                 _hierarchyModel.OnSelectionChanged -= OnSelectionChanged;
                 _hierarchyModel.Dispose();
+                _hierarchyModel.OnItemContextRequested -= HandleContextRequested;
             }
 
+            if (_contextMenu != null)
+                _contextMenu?.Dispose();
             _uiView?.Dispose();
         }
     }

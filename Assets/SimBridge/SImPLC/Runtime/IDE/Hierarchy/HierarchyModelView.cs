@@ -16,7 +16,7 @@ namespace IDE
         private readonly Dictionary<string, HierarchyViewElement> _elements = new Dictionary<string, HierarchyViewElement>();
 
         public event Action<string> OnItemSelected;
-        public event Action<string> OnItemContextRequested;
+        public event Action<string, Vector2> OnItemContextRequested;
         public event Action<string, string> OnItemMoveRequested;
         private string _currentSelectedId;
         private HierarchyViewElement _currentDragTargetElement;
@@ -31,8 +31,13 @@ namespace IDE
             _folderTemplate = folderTemplate;
             
             _scrollView = root.Q<ScrollView>(ScrollViewName);
+            _scrollView.RegisterCallback<ContextClickEvent>(OnBackgroundContextClick);
         }
-
+        private void OnBackgroundContextClick(ContextClickEvent evt)
+        {
+            Vector2 panelPosition = _scrollView.LocalToWorld(evt.localMousePosition);
+            OnItemContextRequested?.Invoke(null, panelPosition);
+        }
         public void SelectElement(string id)
         {
             // Снимаем выделение с предыдущего элемента
@@ -91,7 +96,6 @@ namespace IDE
             }
             else
             {
-                // ОШИБКА БЫЛА ТУТ: Нужно добавлять в contentContainer
                 _scrollView.contentContainer.Add(element.Root);
             }
         }
@@ -265,9 +269,9 @@ private string FindTargetIdRecursive(VisualElement element)
             OnItemSelected?.Invoke(element.Data.Id);
         }
 
-        private void HandleItemContextRequested(HierarchyViewElement element)
+        private void HandleItemContextRequested(HierarchyViewElement element, Vector2 position)
         {
-            OnItemContextRequested?.Invoke(element.Data.Id);
+            OnItemContextRequested?.Invoke(element.Data.Id, position);
         }
 
         public void Dispose()

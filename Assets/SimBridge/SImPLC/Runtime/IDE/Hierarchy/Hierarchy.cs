@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace IDE
 {
@@ -14,7 +15,7 @@ namespace IDE
         public event Action<string> OnItemCreated;
         public event Action<string> OnItemRemoved;
         public event Action<string> OnSelectionChanged;
-        public event Action<string> OnItemContextRequested;
+        public event Action<string, Vector2> OnItemContextRequested;
         public event Action<string> OnFileOpened;
 
         public Hierarchy(HierarchyModelView view)
@@ -81,9 +82,9 @@ namespace IDE
             }
         }
 
-        private void HandleItemContextRequested(string id)
+        private void HandleItemContextRequested(string id, Vector2 position)
         {
-            OnItemContextRequested?.Invoke(id);
+            OnItemContextRequested?.Invoke(id, position);
         }
         private void HandleItemMoveRequested(string id, string targetId)
         {

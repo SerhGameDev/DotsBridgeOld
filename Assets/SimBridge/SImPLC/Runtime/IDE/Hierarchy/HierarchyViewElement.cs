@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace IDE
@@ -12,7 +13,7 @@ namespace IDE
         public IHierarchyItemData Data { get; }
 
         public event Action<HierarchyViewElement> OnSelected;
-        public event Action<HierarchyViewElement> OnContextRequested;
+        public event Action<HierarchyViewElement, Vector2> OnContextRequested;
 
         protected HierarchyViewElement(VisualElement rootElement, IHierarchyItemData data)
         {
@@ -44,7 +45,8 @@ namespace IDE
 
         private void OnContextClick(ContextClickEvent evt)
         {
-            OnContextRequested?.Invoke(this);
+            Vector2 panelPosition = Root.LocalToWorld(evt.localMousePosition);
+            OnContextRequested?.Invoke(this, panelPosition);
             evt.StopPropagation();
         }
 
