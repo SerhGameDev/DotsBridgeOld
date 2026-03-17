@@ -13,12 +13,13 @@ namespace IDE
         private readonly HierarchySelectionModel _selectionModel;
         private readonly HierarchyDragAndDropController _dndController;
         private readonly HierarchyInteractionHandler _interactionHandler;
+        private readonly HierarchyRenameController _renameController;
 
         public event Action<string> OnItemSelected;
         public event Action<string, Vector2> OnItemContextRequested;
         public event Action<string, string> OnItemMoveRequested;
         public event Action<string, string> OnItemRenamed;
-
+        public event Action<string> OnItemDoubleClicked;
         public HierarchyModelView(VisualElement root, VisualTreeAsset fileTemplate, VisualTreeAsset folderTemplate)
         {
             var scrollView = root.Q<ScrollView>("hierarchy-scroll-view");
@@ -28,20 +29,18 @@ namespace IDE
             _selectionModel = new HierarchySelectionModel(_elements);
             _dndController = new HierarchyDragAndDropController(scrollView, _elements);
             _interactionHandler = new HierarchyInteractionHandler();
+            _renameController = new HierarchyRenameController(_elements);
 
             // Связывание событий
             _interactionHandler.OnItemSelected += id => OnItemSelected?.Invoke(id);
             _interactionHandler.OnContextRequested += (id, pos) => OnItemContextRequested?.Invoke(id, pos);
             _dndController.OnItemMoveRequested += (id, targetId) => OnItemMoveRequested?.Invoke(id, targetId);
-            _interactionHandler.OnItemRenamed += (id, newName) => OnItemRenamed?.Invoke(id, newName);
-
+            _renameController.OnRenameCommitted += (id, newName) => OnItemRenamed?.Invoke(id, newName);
+            _interactionHandler.OnItemDoubleClicked += id => OnItemDoubleClicked?.Invoke(id);
             // Регистрация глобальных зон клика
             _interactionHandler.RegisterBackground(scrollView);
         }
-        public void StartRename(string id)
-        {
-            if (_elements.TryGetValue(id, out var el)) el.StartRename();
-        }
+        public void StartRename(string id) => _renameController.StartRename(id);
 
         public void UpdateItemName(string id, string newName)
         {

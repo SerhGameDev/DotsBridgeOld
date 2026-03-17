@@ -8,6 +8,7 @@ namespace IDE
     {
         private readonly HierarchyModelView _view;
         private readonly Dictionary<string, IHierarchyItemData> _items = new Dictionary<string, IHierarchyItemData>();
+        private readonly Dictionary<string, WorkArea> _workAreas = new Dictionary<string, WorkArea>();
         public event Action<string, string> OnItemMoved;
         private int _nextExecutionOrder = 1;
         public string CurrentSelectedId { get; private set; }
@@ -21,22 +22,43 @@ namespace IDE
         public Hierarchy(HierarchyModelView view)
         {
             _view = view;
+            _view.OnItemDoubleClicked += HandleItemDoubleClicked;
             _view.OnItemMoveRequested += HandleItemMoveRequested;
             _view.OnItemRenamed += HandleItemRenamed;
             _view.OnItemSelected += HandleItemSelected;
             _view.OnItemContextRequested += HandleItemContextRequested;
         }
-
         public string CreateFile(string name, string parentFolderId = null)
         {
             string id = Guid.NewGuid().ToString();
             var fileData = new HierarchyItemData(id, name, false, parentFolderId, _nextExecutionOrder++);
             
             _items.Add(id, fileData);
-            _view.AddFile(fileData, parentFolderId);
             
+            // Создаем рабочую область для нового файла
+            _workAreas.Add(id, new WorkArea(id, name));
+            
+            _view.AddFile(fileData, parentFolderId);
             OnItemCreated?.Invoke(id);
             return id;
+        }
+
+        private void HandleItemDoubleClicked(string id)
+        {
+            // Пытаемся открыть рабочую область, если это файл (у папок нет WorkArea)
+            if (_workAreas.TryGetValue(id, out var workArea))
+            {
+                workArea.Open();
+                // Генерируем событие для IDE (например, для переключения вкладок)
+                OnFileOpened?.Invoke(id);
+            }
+        }
+
+        public void RemoveItem(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return;
+            _workAreas.Remove(id);
+            RemoveItemRecursive(id);
         }
         public void TriggerRename(string id) => _view.StartRename(id);
 
@@ -47,12 +69,6 @@ namespace IDE
                 data.Name = newName;
                 _view.UpdateItemName(id, newName);
             }
-        }
-
-        public void RemoveItem(string id)
-        {
-            if (string.IsNullOrEmpty(id)) return;
-            RemoveItemRecursive(id);
         }
 
         private void RemoveItemRecursive(string id)

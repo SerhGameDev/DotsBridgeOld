@@ -8,21 +8,19 @@ namespace IDE
     {
         public event Action<string> OnItemSelected;
         public event Action<string, Vector2> OnContextRequested;
-        public event Action<string, string> OnItemRenamed;
-
+        public event Action<string> OnItemDoubleClicked;
+        
         public void RegisterElement(HierarchyViewElement element)
         {
-            element.OnSelected += id => OnItemSelected?.Invoke(element.Data.Id);
+            element.OnSelected += el => OnItemSelected?.Invoke(el.Data.Id);
             element.OnContextRequested += (el, pos) => OnContextRequested?.Invoke(el.Data.Id, pos);
-            element.OnRenameCommitted += (el, newName) => OnItemRenamed?.Invoke(el.Data.Id, newName);
+            element.OnDoubleClicked += el => OnItemDoubleClicked?.Invoke(el.Data.Id);
         }
 
         public void RegisterBackground(VisualElement bgElement)
         {
-            bgElement.RegisterCallback<PointerDownEvent>(evt =>
-            {
-                if (evt.button == 1)
-                {
+            bgElement.RegisterCallback<PointerDownEvent>(evt => {
+                if (evt.button == 1) {
                     Vector2 pos = bgElement.LocalToWorld(evt.localPosition);
                     OnContextRequested?.Invoke(null, pos);
                     evt.StopPropagation();
