@@ -90,20 +90,37 @@ namespace IDE
             if (id == targetId) return;
 
             string newParentId = null;
+            bool droppedOnSibling = false; // Флаг, указывающий, что мы бросили на соседний элемент
 
+            // Определяем, куда бросили
             if (!string.IsNullOrEmpty(targetId) && _items.TryGetValue(targetId, out var targetItem))
             {
                 if (targetItem.IsFolder)
                 {
-                    newParentId = targetId;
+                    newParentId = targetId; // Бросили на папку -> кладем внутрь
                 }
                 else
                 {
-                    newParentId = targetItem.ParentId; 
+                    newParentId = targetItem.ParentId; // Бросили на файл -> кладем рядом
+                    droppedOnSibling = true;
                 }
             }
 
-            MoveItem(id, newParentId);
+            if (_items.TryGetValue(id, out var draggedItem))
+            {
+                string oldParentId = draggedItem.ParentId;
+
+                // Если родитель не изменился, но мы бросили объект на соседний файл — меняем их визуальный порядок
+                if (oldParentId == newParentId && droppedOnSibling)
+                {
+                    _view.ReorderElement(id, targetId);
+                }
+                // Если родитель изменился — переносим физически в другую папку
+                else if (oldParentId != newParentId)
+                {
+                    MoveItem(id, newParentId);
+                }
+            }
         }
 
         public void MoveItem(string id, string newParentId)

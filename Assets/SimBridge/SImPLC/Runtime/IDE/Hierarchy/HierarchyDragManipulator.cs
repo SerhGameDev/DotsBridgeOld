@@ -7,10 +7,10 @@ namespace IDE
     public class HierarchyDragManipulator : PointerManipulator
     {
         private bool _isDragging;
-        private Vector2 _startPosition;
+        private Vector2 _startPosition; // Теперь храним в мировых координатах
         
         private readonly Action<HierarchyDragManipulator, Vector2> _onDragStart;
-        private readonly Action<HierarchyDragManipulator, Vector2> _onDragUpdate; // Новое событие
+        private readonly Action<HierarchyDragManipulator, Vector2> _onDragUpdate; 
         private readonly Action<HierarchyDragManipulator, Vector2> _onDragEnd;
 
         public HierarchyViewElement Element { get; }
@@ -41,36 +41,34 @@ namespace IDE
             target.UnregisterCallback<PointerUpEvent>(OnPointerUp, TrickleDown.TrickleDown);
             target.UnregisterCallback<PointerCaptureOutEvent>(OnPointerCaptureOut, TrickleDown.TrickleDown);
         }
-        private void OnPointerCaptureOut(PointerCaptureOutEvent evt)
-        {
-            if (_isDragging)
-            {
-                _isDragging = false;
-                _onDragEnd?.Invoke(this, Vector2.zero); 
-            }
-        }
+
         private void OnPointerDown(PointerDownEvent evt)
         {
             if (evt.button != 0) return;
+            
             _isDragging = false;
-            _startPosition = evt.position;
+            // Переводим локальный клик в координаты панели
+            _startPosition = target.LocalToWorld(evt.localPosition);
+            
             target.CapturePointer(evt.pointerId);
-            evt.StopPropagation();
         }
 
         private void OnPointerMove(PointerMoveEvent evt)
         {
             if (!target.HasPointerCapture(evt.pointerId)) return;
 
-            if (!_isDragging && Vector2.Distance(_startPosition, evt.position) > 10f)
+            // Текущая позиция в координатах панели
+            Vector2 currentPanelPos = target.LocalToWorld(evt.localPosition);
+
+            if (!_isDragging && Vector2.Distance(_startPosition, currentPanelPos) > 10f)
             {
                 _isDragging = true;
-                _onDragStart?.Invoke(this, evt.position);
+                _onDragStart?.Invoke(this, currentPanelPos);
             }
 
             if (_isDragging)
             {
-                _onDragUpdate?.Invoke(this, evt.position);
+                _onDragUpdate?.Invoke(this, currentPanelPos);
             }
         }
 
@@ -82,7 +80,17 @@ namespace IDE
             if (_isDragging)
             {
                 _isDragging = false;
-                _onDragEnd?.Invoke(this, evt.position);
+                Vector2 finalPanelPos = target.LocalToWorld(evt.localPosition);
+                _onDragEnd?.Invoke(this, finalPanelPos);
+            }
+        }
+
+        private void OnPointerCaptureOut(PointerCaptureOutEvent evt)
+        {
+            if (_isDragging)
+            {
+                _isDragging = false;
+                _onDragEnd?.Invoke(this, Vector2.zero);
             }
         }
     }

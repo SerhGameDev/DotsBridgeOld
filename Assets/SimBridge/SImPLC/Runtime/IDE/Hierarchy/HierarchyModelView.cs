@@ -19,9 +19,12 @@ namespace IDE
         public event Action<string> OnItemContextRequested;
         public event Action<string, string> OnItemMoveRequested;
         private string _currentSelectedId;
+        private HierarchyViewElement _currentDragTargetElement;
         private VisualElement _dragGhost;
         
-
+        private readonly List<VisualElement> _pickList = new List<VisualElement>();
+        
+        
         public HierarchyModelView(VisualElement root, VisualTreeAsset fileTemplate, VisualTreeAsset folderTemplate)
         {
             _fileTemplate = fileTemplate;
@@ -106,10 +109,21 @@ namespace IDE
             _scrollView.panel.visualTree.Add(_dragGhost);
             UpdateGhostPosition(position);
         }
+        public void ReorderElement(string draggedId, string targetId)
+        {
+            if (_elements.TryGetValue(draggedId, out var draggedEl) && 
+                _elements.TryGetValue(targetId, out var targetEl))
+            {
+                // Метод PlaceBehind ставит перетаскиваемый элемент визуально НИЖЕ целевого.
+                // Если вам больше нравится ставить ВЫШЕ, используйте PlaceInFront(targetEl.Root)
+                draggedEl.Root.PlaceBehind(targetEl.Root);
+            }
+        }
         private void HandleDragEnd(HierarchyDragManipulator manipulator, Vector2 position)
         {
-            var elementRoot = manipulator.Element.Root;
-            elementRoot.style.opacity = 1.0f;
+            manipulator.Element.Root.style.opacity = 1.0f;
+
+            ClearDragTargetHighlight();
 
             if (_dragGhost != null)
             {
@@ -119,20 +133,8 @@ namespace IDE
 
             if (position == Vector2.zero) return;
 
-            // ВАЖНО: Полностью скрываем элемент, чтобы луч точно пролетел сквозь все 
-            // дочерние Label и иконки, которые иначе перехватили бы panel.Pick.
-            var initialDisplay = elementRoot.style.display;
-            elementRoot.style.display = DisplayStyle.None;
-
-            // Поиск цели (папки или файла) под курсором
-            var pickedElement = _scrollView.panel.Pick(position);
-            string targetId = FindTargetIdRecursive(pickedElement);
-
-            // Возвращаем видимость элемента
-            elementRoot.style.display = initialDisplay;
-
-            // Для отладки (чтобы убедиться, что цель найдена верно)
-             Debug.Log($"[DragAndDrop] Dragged: {manipulator.Element.Data.Id}, Target: {targetId}");
+            // Находим цель для перемещения
+            string targetId = GetTargetIdUnderPointer(position, manipulator.Element.Data.Id);
 
             OnItemMoveRequested?.Invoke(manipulator.Element.Data.Id, targetId);
         }
@@ -144,18 +146,21 @@ namespace IDE
             {
                 oldFolder.RemoveChild(element);
             }
-            else if (element.Root.parent != null)
+            else
             {
-                element.Root.parent.Remove(element.Root);
+                // Если был в корне, удаляем из контейнера скролла
+                _scrollView.contentContainer.Remove(element.Root);
             }
 
+            // 2. Добавляем в нового родителя
             if (!string.IsNullOrEmpty(newParentId) && _elements.TryGetValue(newParentId, out var newParent) && newParent is HierarchyViewElementFolder newFolder)
             {
                 newFolder.AddChild(element);
             }
             else
             {
-                _scrollView.Add(element.Root);
+                // Добавляем в корень контейнера скролла
+                _scrollView.contentContainer.Add(element.Root);
             }
         }
         public void RemoveElement(string id)
@@ -178,11 +183,58 @@ namespace IDE
         }
         
 
-private void HandleDragUpdate(HierarchyDragManipulator manipulator, Vector2 position)
-{
-    UpdateGhostPosition(position);
-}
+        private void HandleDragUpdate(HierarchyDragManipulator manipulator, Vector2 position)
+        {
+            UpdateGhostPosition(position);
+            string targetId = GetTargetIdUnderPointer(position, manipulator.Element.Data.Id);
+            UpdateDragTargetHighlight(targetId);
+        }
+        private string GetTargetIdUnderPointer(Vector2 position, string draggedElementId)
+        {
+            _pickList.Clear();
+    
+            // Передаем координаты панели и список для заполнения
+            _scrollView.panel.PickAll(position, _pickList);
+    
+            foreach (var picked in _pickList)
+            {
+                string id = FindTargetIdRecursive(picked);
+        
+                // Нашли ID, который не принадлежит перетаскиваемому объекту
+                if (!string.IsNullOrEmpty(id) && id != draggedElementId)
+                {
+                    return id;
+                }
+            }
+            return null;
+        }
+        private void UpdateDragTargetHighlight(string targetId)
+        {
+            // Если мышь ушла с предыдущей цели — стираем обводку
+            if (_currentDragTargetElement != null && _currentDragTargetElement.Data.Id != targetId)
+            {
+                ClearDragTargetHighlight();
+            }
 
+            // Если навели на новую цель — рисуем обводку
+            if (!string.IsNullOrEmpty(targetId) && _elements.TryGetValue(targetId, out var newTarget))
+            {
+                _currentDragTargetElement = newTarget;
+        
+                // Включаем циановую полосу снизу
+                _currentDragTargetElement.Root.style.borderBottomWidth = 2;
+                _currentDragTargetElement.Root.style.borderBottomColor = Color.cyan;
+            }
+        }
+        private void ClearDragTargetHighlight()
+        {
+            if (_currentDragTargetElement != null)
+            {
+                _currentDragTargetElement.Root.style.borderBottomWidth = StyleKeyword.Null;
+                _currentDragTargetElement.Root.style.borderBottomColor = StyleKeyword.Null;
+                _currentDragTargetElement = null;
+            }
+        }
 private void UpdateGhostPosition(Vector2 position)
 {
     if (_dragGhost == null) return;
