@@ -331,13 +331,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 787889527}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a1cbc2396c40f1045b68c4a5df376470, type: 3}
+  m_Script: {fileID: 11500000, guid: 458c33cb4b0142f6bd0338468dc26fb5, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: SimPLC::UIInitializer
-  folderTemplate: {fileID: 9197481963319205126, guid: dc665c62441326c4f93f3b6fe164651b, type: 3}
-  itemTemplate: {fileID: 9197481963319205126, guid: 7be790ae670005c4d89d69cec6b6023c, type: 3}
-  popupTemplate: {fileID: 9197481963319205126, guid: 9a91137224bbd3c49beea18778bbca15, type: 3}
-  popupItemTemplate: {fileID: 9197481963319205126, guid: eded3a359432c954c9e01cd75d20458a, type: 3}
+  m_EditorClassIdentifier: SimPLC::IDE.IDEUIDocument
+  _hierarchyWindowTemplate: {fileID: 9197481963319205126, guid: 94aad7359f789ea4aa184b9c7da4cce7, type: 3}
+  _fileTemplate: {fileID: 9197481963319205126, guid: 7be790ae670005c4d89d69cec6b6023c, type: 3}
+  _folderTemplate: {fileID: 9197481963319205126, guid: dc665c62441326c4f93f3b6fe164651b, type: 3}
 --- !u!1 &1261193531
 GameObject:
   m_ObjectHideFlags: 0

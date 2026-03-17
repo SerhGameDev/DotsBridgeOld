@@ -11,7 +11,6 @@ namespace IDE
         private int _nextExecutionOrder = 1;
         public string CurrentSelectedId { get; private set; }
 
-        // Расширенная система событий для гибкости IDE
         public event Action<string> OnItemCreated;
         public event Action<string> OnItemRemoved;
         public event Action<string> OnSelectionChanged;
@@ -75,7 +74,6 @@ namespace IDE
                 OnSelectionChanged?.Invoke(id);
             }
 
-            // Логика "открытия" файла (например, для двойного клика, но пока висит на обычном выделении)
             if (_items.TryGetValue(id, out var item) && !item.IsFolder)
             {
                 OnFileOpened?.Invoke(id);
