@@ -16,6 +16,7 @@ namespace IDE
 
         public event Action<string> OnItemSelected;
         public event Action<string> OnItemContextRequested;
+        private string _currentSelectedId;
 
         public HierarchyModelView(VisualElement root, VisualTreeAsset fileTemplate, VisualTreeAsset folderTemplate)
         {
@@ -25,6 +26,30 @@ namespace IDE
             _scrollView = root.Q<ScrollView>(ScrollViewName);
         }
 
+        public void SelectElement(string id)
+        {
+            // Снимаем выделение с предыдущего элемента
+            if (!string.IsNullOrEmpty(_currentSelectedId) && _elements.TryGetValue(_currentSelectedId, out var prevElement))
+            {
+                prevElement.SetSelectedState(false);
+            }
+
+            // Выделяем новый элемент
+            if (_elements.TryGetValue(id, out var newElement))
+            {
+                newElement.SetSelectedState(true);
+                _currentSelectedId = id;
+            }
+        }
+
+        public void ClearSelection()
+        {
+            if (!string.IsNullOrEmpty(_currentSelectedId) && _elements.TryGetValue(_currentSelectedId, out var prevElement))
+            {
+                prevElement.SetSelectedState(false);
+                _currentSelectedId = null;
+            }
+        }
         public void AddFile(IHierarchyItemData data, string parentFolderId = null)
         {
             var fileVisual = _fileTemplate.Instantiate();

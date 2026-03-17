@@ -5,6 +5,9 @@ namespace IDE
 {
     public abstract class HierarchyViewElement : IDisposable
     {
+        // USS класс для визуального отображения выделенного состояния
+        private const string SelectedUssClassName = "hierarchy-item-selected";
+
         public VisualElement Root { get; }
         public IHierarchyItemData Data { get; }
 
@@ -21,8 +24,16 @@ namespace IDE
         }
 
         public abstract void SetName(string name);
-        
         public virtual void SetExecutionOrder(int order){}
+
+        // Управление визуальным состоянием выделения
+        public void SetSelectedState(bool isSelected)
+        {
+            if (isSelected)
+                Root.AddToClassList(SelectedUssClassName);
+            else
+                Root.RemoveFromClassList(SelectedUssClassName);
+        }
 
         private void OnClick(ClickEvent evt)
         {

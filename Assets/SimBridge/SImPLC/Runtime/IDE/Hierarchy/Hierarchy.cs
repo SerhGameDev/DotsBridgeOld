@@ -9,7 +9,13 @@ namespace IDE
         private readonly Dictionary<string, IHierarchyItemData> _items = new Dictionary<string, IHierarchyItemData>();
         
         private int _nextExecutionOrder = 1;
+        public string CurrentSelectedId { get; private set; }
 
+        // Расширенная система событий для гибкости IDE
+        public event Action<string> OnItemCreated;
+        public event Action<string> OnItemRemoved;
+        public event Action<string> OnSelectionChanged;
+        public event Action<string> OnItemContextRequested;
         public event Action<string> OnFileOpened;
 
         public Hierarchy(HierarchyModelView view)
@@ -28,6 +34,7 @@ namespace IDE
             _items.Add(id, fileData);
             _view.AddFile(fileData, parentFolderId);
             
+            OnItemCreated?.Invoke(id);
             return id;
         }
 
@@ -39,6 +46,7 @@ namespace IDE
             _items.Add(id, folderData);
             _view.AddFolder(folderData, parentFolderId);
             
+            OnItemCreated?.Invoke(id);
             return id;
         }
 
@@ -47,11 +55,27 @@ namespace IDE
             if (_items.Remove(id))
             {
                 _view.RemoveElement(id);
+                
+                if (CurrentSelectedId == id)
+                {
+                    CurrentSelectedId = null;
+                    OnSelectionChanged?.Invoke(null);
+                }
+                
+                OnItemRemoved?.Invoke(id);
             }
         }
 
         private void HandleItemSelected(string id)
         {
+            if (CurrentSelectedId != id)
+            {
+                CurrentSelectedId = id;
+                _view.SelectElement(id);
+                OnSelectionChanged?.Invoke(id);
+            }
+
+            // Логика "открытия" файла (например, для двойного клика, но пока висит на обычном выделении)
             if (_items.TryGetValue(id, out var item) && !item.IsFolder)
             {
                 OnFileOpened?.Invoke(id);
@@ -60,7 +84,7 @@ namespace IDE
 
         private void HandleItemContextRequested(string id)
         {
-            // Здесь в будущем будет вызов контекстного меню
+            OnItemContextRequested?.Invoke(id);
         }
 
         public void Dispose()
