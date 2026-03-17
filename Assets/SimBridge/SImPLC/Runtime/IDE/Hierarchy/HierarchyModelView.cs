@@ -19,6 +19,7 @@ namespace IDE
         public event Action<string> OnItemContextRequested;
         public event Action<string, string> OnItemMoveRequested;
         private string _currentSelectedId;
+        private VisualElement _dragGhost;
         
 
         public HierarchyModelView(VisualElement root, VisualTreeAsset fileTemplate, VisualTreeAsset folderTemplate)
@@ -75,7 +76,7 @@ namespace IDE
             
             element.OnSelected += HandleItemSelected;
             element.OnContextRequested += HandleItemContextRequested;
-            var dragManipulator = new HierarchyDragManipulator(element, HandleDragStart, HandleDragEnd);
+            var dragManipulator = new HierarchyDragManipulator(element, HandleDragStart, HandleDragUpdate, HandleDragEnd);
             element.Root.AddManipulator(dragManipulator);
             if (!string.IsNullOrEmpty(parentFolderId) && 
                 _elements.TryGetValue(parentFolderId, out var parentElement) && 
@@ -90,34 +91,43 @@ namespace IDE
         }
         private void HandleDragStart(HierarchyDragManipulator manipulator, Vector2 position)
         {
-            manipulator.Element.Root.style.opacity = 0.5f;
-        }private void HandleDragEnd(HierarchyDragManipulator manipulator, Vector2 position)
+            var original = manipulator.Element.Root;
+            original.style.opacity = 0.3f;
+
+            // Создаем "призрака" — визуальную копию перетаскиваемого элемента
+            _dragGhost = new Label(manipulator.Element.Data.Name); // Можно инстанцировать UXML для красоты
+            _dragGhost.style.position = Position.Absolute;
+            _dragGhost.style.backgroundColor = new Color(0.2f, 0.2f, 0.2f, 0.8f);
+            _dragGhost.style.borderBottomColor = _dragGhost.style.borderTopColor = Color.cyan;
+            _dragGhost.style.borderLeftWidth = _dragGhost.style.borderRightWidth = 2;
+            _dragGhost.style.paddingLeft = _dragGhost.style.paddingRight = 5;
+            _dragGhost.pickingMode = PickingMode.Ignore; // Важно: чтобы Pick не выбирал самого призрака
+
+            _scrollView.panel.visualTree.Add(_dragGhost);
+            UpdateGhostPosition(position);
+        }
+        private void HandleDragEnd(HierarchyDragManipulator manipulator, Vector2 position)
         {
             var elementRoot = manipulator.Element.Root;
-            elementRoot.style.opacity = 1f;
+            elementRoot.style.opacity = 1.0f;
 
-            if (position == Vector2.zero) return; 
+            if (_dragGhost != null)
+            {
+                _dragGhost.parent?.Remove(_dragGhost);
+                _dragGhost = null;
+            }
+
+            if (position == Vector2.zero) return;
 
             elementRoot.pickingMode = PickingMode.Ignore;
-            var pickedElement = _scrollView.panel.Pick(position);
-            elementRoot.pickingMode = PickingMode.Position;
 
-            string targetId = null;
-            var current = pickedElement;
-    
-            while (current != null)
-            {
-                if (current.userData is string id && _elements.ContainsKey(id))
-                {
-                    targetId = id;
-                    break;
-                }
-                current = current.parent;
-            }
+            var pickedElement = _scrollView.panel.Pick(position);
+            string targetId = FindTargetIdRecursive(pickedElement);
+
+            elementRoot.pickingMode = PickingMode.Position;
 
             OnItemMoveRequested?.Invoke(manipulator.Element.Data.Id, targetId);
         }
-
         public void MoveElement(string id, string newParentId, string oldParentId)
         {
             if (!_elements.TryGetValue(id, out var element)) return;
@@ -158,7 +168,34 @@ namespace IDE
                 element.Dispose();
             }
         }
+        
 
+private void HandleDragUpdate(HierarchyDragManipulator manipulator, Vector2 position)
+{
+    UpdateGhostPosition(position);
+}
+
+private void UpdateGhostPosition(Vector2 position)
+{
+    if (_dragGhost == null) return;
+    
+    // Смещение призрака чуть в сторону от курсора
+    _dragGhost.style.left = position.x + 10;
+    _dragGhost.style.top = position.y + 10;
+}
+
+
+private string FindTargetIdRecursive(VisualElement element)
+{
+    var current = element;
+    while (current != null)
+    {
+        if (current.userData is string id && _elements.ContainsKey(id))
+            return id;
+        current = current.parent;
+    }
+    return null;
+}
         private void HandleItemSelected(HierarchyViewElement element)
         {
             OnItemSelected?.Invoke(element.Data.Id);
