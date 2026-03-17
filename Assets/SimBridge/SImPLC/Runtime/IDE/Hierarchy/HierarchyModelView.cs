@@ -33,13 +33,10 @@ namespace IDE
             {
                 if (evt.button == 1) // ПКМ
                 {
-                    // Используем LocalToWorld, чтобы меню знало, где рисоваться на экране
                     Vector2 panelPosition = element.LocalToWorld(evt.localPosition);
             
-                    // Вызываем событие с null, что означает "клик по фону/общему пространству"
                     OnItemContextRequested?.Invoke(null, panelPosition);
             
-                    // Останавливаем событие, чтобы оно не дублировалось, если элементы вложены
                     evt.StopPropagation();
                 }
             });
@@ -58,7 +55,6 @@ namespace IDE
             if (evt.button == 1)
             {
                 Vector2 panelPosition = _scrollView.LocalToWorld(evt.localPosition);
-                // Передаем null, так как кликнули не по конкретному файлу
                 OnItemContextRequested?.Invoke(null, panelPosition);
                 evt.StopPropagation();
             }
