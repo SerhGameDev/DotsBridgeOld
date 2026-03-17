@@ -9,6 +9,10 @@ namespace SimVent.Systems
     [UpdateAfter(typeof(DuctPhysicsSystem))] // Датчики читают данные ПОСЛЕ того, как отработает физика
     public partial struct SensorSystem : ISystem
     {
+        public void OnCreate(ref SystemState state)
+        {
+            state.RequireForUpdate<SimulationTimeComponent>();
+        }
         public void OnUpdate(ref SystemState state)
         {
             float dt = SystemAPI.GetSingleton<SimulationTimeComponent>().FixedStep; // Никаких умножений!

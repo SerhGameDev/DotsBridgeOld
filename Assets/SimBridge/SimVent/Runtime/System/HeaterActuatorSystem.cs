@@ -9,9 +9,16 @@ namespace SimVent.Systems
     [UpdateBefore(typeof(DuctPhysicsSystem))] // Сначала вычисляем мощность, потом физику воздуха
     public partial struct HeaterActuatorSystem : ISystem
     {
+        public void OnCreate(ref SystemState state)
+        {
+            state.RequireForUpdate<SimulationTimeComponent>();
+        }
         public void OnUpdate(ref SystemState state)
         {
-            float dt = SystemAPI.GetSingleton<SimulationTimeComponent>().FixedStep; // Никаких умножений!
+            if (!SystemAPI.TryGetSingleton<SimulationTimeComponent>(out var time)) 
+                return;
+
+            float dt = time.FixedStep;
             var ductLookup = SystemAPI.GetComponentLookup<AirDuctComponent>(true);
 
             new HeaterControlJob

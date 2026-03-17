@@ -21,7 +21,9 @@ public class EditorContext : MonoBehaviour
     public float minZoom = 0.2f;
     public float maxZoom = 2.0f;
     public float zoomSpeed = 0.05f;
-
+    public static float Zoom => instance?.workspaceManager?.Zoom ?? 1f;
+    public static WorkspaceManager Workspace => instance?.workspaceManager;
+    
     public static IReadOnlyList<Node> Nodes => instance?.nodeManager.AllNodes;
     public static Port HoveredPort { get; set; }
     private static EditorContext instance;
@@ -76,7 +78,6 @@ public class EditorContext : MonoBehaviour
         // Клик по фону слушаем на вьюпорте
         workspaceViewport.RegisterCallback<PointerDownEvent>(OnWorkspacePointerDown);
     }
-
     private void OnWorkspacePointerDown(PointerDownEvent evt)
     {
         if (evt.target == workspaceViewport || evt.target == workspaceManager.ContentContainer) 
@@ -88,8 +89,7 @@ public class EditorContext : MonoBehaviour
             }
             else if (evt.button == 1) 
             {
-                // Конвертируем экранные координаты в координаты КОНТЕНТА с учетом зума
-                Vector2 localPos = workspaceManager.ContentContainer.WorldToLocal(evt.position);
+                Vector2 localPos = workspaceManager.ScreenToWorkspace(evt.position);
                 contextMenu.Show(evt.position, localPos);
                 evt.StopPropagation();
             }

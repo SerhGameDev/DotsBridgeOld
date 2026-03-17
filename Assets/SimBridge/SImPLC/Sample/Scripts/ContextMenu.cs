@@ -75,14 +75,13 @@ namespace SimPLS
                     btn.RegisterCallback<MouseLeaveEvent>(e => btn.style.backgroundColor = Color.clear);
 
                     scrollView.Add(btn);
-                    itemButtons.Add(btn, nodeData.MenuName.ToLower()); // Сохраняем для поиска в нижнем регистре
+                    itemButtons.Add(btn, nodeData.MenuName.ToLower()); 
                     buttonsInCategory.Add(btn);
                 }
 
                 categoryGroups.Add(categoryLabel, buttonsInCategory);
             }
 
-            // Фокус на поиске при открытии
             this.RegisterCallback<GeometryChangedEvent>(e => searchField.Focus());
         }
 

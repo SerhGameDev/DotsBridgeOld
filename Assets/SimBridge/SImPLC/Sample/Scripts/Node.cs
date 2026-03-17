@@ -123,36 +123,28 @@ namespace SimPLS
         {
             if (!isDragging || !this.HasPointerCapture(evt.pointerId)) return;
 
-            Vector2 delta = evt.position - (Vector3)startMousePosition;
+            // --- ИСПРАВЛЕНО: Делим дельту на зум, чтобы скорость была 1:1 ---
+            Vector2 delta = (evt.position - (Vector3)startMousePosition) / EditorContext.Zoom;
+            
             float rawX = startElementPosition.x + delta.x;
             float rawY = startElementPosition.y + delta.y;
 
             // 1. ПРИВЯЗКА К СЕТКЕ (Grid Snapping)
-            // Округляем до ближайшего числа, кратного GRID_SIZE
             float snappedX = Mathf.Round(rawX / GRID_SIZE) * GRID_SIZE;
             float snappedY = Mathf.Round(rawY / GRID_SIZE) * GRID_SIZE;
 
-            // 2. МАГНИТНОЕ ВЫРАВНИВАНИЕ ПО ДРУГИМ НОДАМ (Magnetic Snapping)
             foreach (var otherNode in EditorContext.Nodes)
             {
-                if (otherNode == this) continue; // Игнорируем сами себя
+                if (otherNode == this) continue;
 
-                // Проверяем выравнивание по левому краю (Ось X)
                 if (Mathf.Abs(snappedX - otherNode.LogicalPosition.x) < SNAP_THRESHOLD)
-                {
                     snappedX = otherNode.LogicalPosition.x;
-                }
 
-                // Проверяем выравнивание по верхнему краю (Ось Y)
                 if (Mathf.Abs(snappedY - otherNode.LogicalPosition.y) < SNAP_THRESHOLD)
-                {
                     snappedY = otherNode.LogicalPosition.y;
-                }
             }
 
-            // Применяем вычисленные координаты
             SetPosition(snappedX, snappedY);
-
             evt.StopPropagation();
         }
 

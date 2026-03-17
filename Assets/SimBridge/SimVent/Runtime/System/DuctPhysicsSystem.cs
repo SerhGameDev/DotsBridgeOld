@@ -9,6 +9,10 @@ namespace SimVent.Systems
     [UpdateAfter(typeof(ActuatorSystem))]
     public partial struct DuctPhysicsSystem : ISystem
     {
+        public void OnCreate(ref SystemState state)
+        {
+            state.RequireForUpdate<SimulationTimeComponent>();
+        }
         public void OnUpdate(ref SystemState state)
         {
             // Получаем шаг времени

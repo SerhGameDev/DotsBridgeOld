@@ -56,14 +56,14 @@ namespace SimPLS
         private void OnGenerateVisualContent(MeshGenerationContext ctx)
         {
             var painter = ctx.painter2D;
-            if (painter == null || workspace == null) return;
+            // Убеждаемся, что EditorContext жив
+            if (painter == null || EditorContext.Workspace == null) return;
 
-            // Вычисляем начальную точку в координатах Workspace
-            Vector2 startPos = workspace.WorldToLocal(PortA.VisualConnector.worldBound.center);
+            // --- ИСПРАВЛЕНО: Получаем экранные центры портов (worldBound) и конвертируем их чисто ---
+            Vector2 startPos = EditorContext.Workspace.ScreenToWorkspace(PortA.VisualConnector.worldBound.center);
             
-            // Вычисляем конечную точку (либо второй порт, либо мышка)
             Vector2 endPos = PortB != null 
-                ? workspace.WorldToLocal(PortB.VisualConnector.worldBound.center) 
+                ? EditorContext.Workspace.ScreenToWorkspace(PortB.VisualConnector.worldBound.center) 
                 : tempMouseEndPos;
 
             painter.strokeColor = new Color(0.8f, 0.8f, 0.2f, 1f); 

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace SimPLS
@@ -16,7 +17,6 @@ namespace SimPLS
         {
             this.workspace = workspace;
         
-            // Менеджер сам слушает события мыши на рабочей области
             workspace.RegisterCallback<PointerMoveEvent>(OnPointerMove);
             workspace.RegisterCallback<PointerUpEvent>(OnPointerUp);
         }
@@ -53,7 +53,8 @@ namespace SimPLS
         {
             if (!isDrawing || activeTempConnection == null) return;
         
-            activeTempConnection.UpdateTempEndPosition(workspace.WorldToLocal(evt.position));
+            Vector2 correctLocalPos = EditorContext.Workspace.ScreenToWorkspace(evt.position);
+            activeTempConnection.UpdateTempEndPosition(correctLocalPos);
         }
 
         private void OnPointerUp(PointerUpEvent evt)
@@ -62,7 +63,7 @@ namespace SimPLS
             isDrawing = false;
 
             bool isConnected = false;
-            Port hovered = GraphManager.HoveredPort; // Берем из статики или прокидываем через конструктор
+            Port hovered = GraphManager.HoveredPort; 
 
             if (hovered != null && hovered.IsInput && hovered.ParentNode != startDragPort.ParentNode)
             {

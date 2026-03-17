@@ -2,12 +2,21 @@
     <ui:VisualElement style="flex-grow: 1; flex-direction: row; background-color: rgb(20, 20, 20);">
         <ui:VisualElement style="flex-grow: 1; width: 30%; align-items: stretch; align-content: flex-start; flex-direction: row; flex-wrap: nowrap; align-self: auto; justify-content: flex-start; background-color: rgb(56, 56, 56);">
             <ui:VisualElement style="flex-grow: 1; left: -1px; height: auto; background-color: rgb(56, 56, 56); position: relative; width: 10%; border-right-width: 1px; border-right-color: rgb(0, 0, 0); min-width: 50px; border-top-width: 0; border-bottom-width: 0; border-left-width: 0;"/>
-            <ui:VisualElement style="flex-grow: 1; left: auto; height: auto; background-color: rgb(56, 56, 56); position: relative; width: 90%; border-right-width: 0; border-right-color: rgb(0, 0, 0);">
-                <ui:Label text="Code file" style="color: rgb(255, 255, 255); -unity-font-definition: url(&quot;project://database/Library/unity%20default%20resources?fileID=10102&amp;guid=0000000000000000e000000000000000&amp;type=0#LegacyRuntime&quot;); font-size: 20px; -unity-text-align: upper-left;"/>
+            <ui:VisualElement style="left: auto; height: auto; background-color: rgb(56, 56, 56); position: relative; width: 90%; border-right-width: 0; border-right-color: rgb(0, 0, 0); justify-content: flex-start; align-items: stretch; flex-direction: column;">
+                <ui:VisualElement style="flex-grow: 1; height: auto; position: relative; top: auto; max-height: 75px; flex-direction: row;">
+                    <ui:Label text="Code file" style="color: rgb(255, 255, 255); -unity-font-definition: url(&quot;project://database/Library/unity%20default%20resources?fileID=10102&amp;guid=0000000000000000e000000000000000&amp;type=0#LegacyRuntime&quot;); font-size: 20px; -unity-text-align: upper-left;"/>
+                    <ui:VisualElement style="flex-grow: 1; flex-direction: row-reverse;">
+                        <ui:Button text="" icon-image="project://database/Assets/SimBridge/SImPLC/Sprite/diskette.png?fileID=2800000&amp;guid=8ac3d76781059264caa2cb4e9f564b8c&amp;type=3#diskette" name="add-button-in-main-ui" style="background-color: rgba(255, 255, 255, 0); max-width: 55px; max-height: 55px; border-left-color: rgba(149, 149, 149, 0); border-right-color: rgba(149, 149, 149, 0); border-top-color: rgba(149, 149, 149, 0); border-bottom-color: rgba(149, 149, 149, 0);"/>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="hierarchy-container" style="flex-grow: 1;"/>
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement style="flex-grow: 1; width: 70%; background-color: rgba(55, 55, 55, 0); padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0; border-top-left-radius: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; border-bottom-left-radius: 0; align-items: center; justify-content: space-around; align-self: center; height: 100%;">
             <ui:VisualElement name="workspace-area" view-data-key="workspace-area" style="flex-grow: 1; width: 100%; height: 100%; overflow: hidden; background-color: rgb(42, 42, 42);"/>
+        </ui:VisualElement>
+        <ui:VisualElement style="flex-grow: 1; position: absolute; height: 713px; width: 75px; top: 25px; left: auto; right: 25px; background-color: rgb(62, 62, 62); border-top-left-radius: 10px; border-top-right-radius: 10px; border-bottom-right-radius: 10px; border-bottom-left-radius: 10px; bottom: 25px;">
+            <ui:VisualElement style="flex-grow: 1; position: relative; height: 75px; width: 75px; top: 23px; left: auto; right: 2px; background-color: rgb(62, 62, 62); border-top-left-radius: 10px; border-top-right-radius: 10px; border-bottom-right-radius: 10px; border-bottom-left-radius: 10px; max-height: 75px; max-width: 75px;"/>
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

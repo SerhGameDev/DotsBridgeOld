@@ -21,7 +21,6 @@ namespace SimPLS
         public const string PORT_LABEL = "port-label";        // Текст подписи порта
         public const string PORT_CONNECTOR = "port-connector";// Кружочек (или кнопка), откуда тянется провод
     }
-// --- НОВОЕ: Типы данных для фильтрации ---
     public enum PortDataType
     {
         Flow,   // Поток выполнения (обычно белые порты)
@@ -34,7 +33,7 @@ namespace SimPLS
         public Node ParentNode { get; private set; } 
         public bool IsInput { get; private set; }         
         public string PortName { get; private set; }      
-        public PortDataType DataType { get; private set; } // НОВОЕ: Тип порта
+        public PortDataType DataType { get; private set; } 
         public VisualElement VisualConnector { get; private set; } 
         public List<Port> ConnectedPorts { get; private set; } = new List<Port>();
 
@@ -56,7 +55,6 @@ namespace SimPLS
             }
         }
 
-        // --- НОВОЕ: Логическое отключение ---
         public void Disconnect(Port otherPort)
         {
             if (ConnectedPorts.Contains(otherPort))

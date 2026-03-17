@@ -9,6 +9,10 @@ namespace SimVent.Systems
     [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
     public partial struct SensorUpdateSystem : ISystem
     {
+        public void OnCreate(ref SystemState state)
+        {
+            state.RequireForUpdate<SimulationTimeComponent>();
+        }
         public void OnUpdate(ref SystemState state)
         {
             // Берем текущее время симуляции

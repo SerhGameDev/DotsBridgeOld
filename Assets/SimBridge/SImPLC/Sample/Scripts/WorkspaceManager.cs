@@ -1,106 +1,101 @@
 using UnityEngine;
 using UnityEngine.UIElements;
 
-public class WorkspaceManager
+namespace SimPLS
 {
-    public VisualElement ContentContainer { get; private set; } // Сюда теперь будем добавлять ноды!
-    
-    private VisualElement viewport;
-    
-    // Внутренние переменные состояния
-    private Vector2 panOffset = Vector2.zero;
-    private float currentZoom = 1f;
-    private bool isPanning = false;
-    private Vector2 panStartMousePos;
-    private Vector2 panStartOffset;
-
-    // Настройки (будут передаваться из EditorContext)
-    private float minZoom;
-    private float maxZoom;
-    private float zoomSpeed;
-
-    public WorkspaceManager(VisualElement viewport, float minZoom, float maxZoom, float zoomSpeed)
+    public class WorkspaceManager
     {
-        this.viewport = viewport;
-        this.minZoom = minZoom;
-        this.maxZoom = maxZoom;
-        this.zoomSpeed = zoomSpeed;
-
-        // Создаем контейнер для контента программно, чтобы не переделывать UXML
-        ContentContainer = new VisualElement { name = "content-container" };
-        ContentContainer.style.position = Position.Absolute;
+        public VisualElement ContentContainer { get; private set; }
         
-        // ВАЖНО: Точка трансформации в левый верхний угол для правильной математики зума
-        ContentContainer.style.transformOrigin = new TransformOrigin(0, 0); 
-        
-        viewport.Add(ContentContainer);
+        public float Zoom => currentZoom; 
 
-        // Подписываемся на события мыши (Колесико и средняя кнопка)
-        viewport.RegisterCallback<WheelEvent>(OnWheel);
-        viewport.RegisterCallback<PointerDownEvent>(OnPointerDown);
-        viewport.RegisterCallback<PointerMoveEvent>(OnPointerMove);
-        viewport.RegisterCallback<PointerUpEvent>(OnPointerUp);
-        viewport.RegisterCallback<PointerCaptureOutEvent>(evt => isPanning = false);
-    }
+        private VisualElement viewport;
+        private Vector2 panOffset = Vector2.zero;
+        private float currentZoom = 1f;
+        private bool isPanning = false;
+        private Vector2 panStartMousePos;
+        private Vector2 panStartOffset;
 
-    private void OnPointerDown(PointerDownEvent evt)
-    {
-        // Кнопка 2 - это колесико мыши (Middle Click)
-        if (evt.button == 2)
+        private float minZoom;
+        private float maxZoom;
+        private float zoomSpeed;
+
+        public WorkspaceManager(VisualElement viewport, float minZoom, float maxZoom, float zoomSpeed)
         {
-            isPanning = true;
-            panStartMousePos = evt.position;
-            panStartOffset = panOffset;
+            this.viewport = viewport;
+            this.minZoom = minZoom;
+            this.maxZoom = maxZoom;
+            this.zoomSpeed = zoomSpeed;
+
+            ContentContainer = new VisualElement { name = "content-container" };
+            ContentContainer.style.position = Position.Absolute;
+            ContentContainer.style.transformOrigin = new TransformOrigin(0, 0); 
             
-            viewport.CapturePointer(evt.pointerId);
-            evt.StopPropagation();
+            viewport.Add(ContentContainer);
+
+            viewport.RegisterCallback<WheelEvent>(OnWheel);
+            viewport.RegisterCallback<PointerDownEvent>(OnPointerDown);
+            viewport.RegisterCallback<PointerMoveEvent>(OnPointerMove);
+            viewport.RegisterCallback<PointerUpEvent>(OnPointerUp);
+            viewport.RegisterCallback<PointerCaptureOutEvent>(evt => isPanning = false);
         }
-    }
 
-    private void OnPointerMove(PointerMoveEvent evt)
-    {
-        if (!isPanning || !viewport.HasPointerCapture(evt.pointerId)) return;
-
-        Vector2 delta = evt.position - (Vector3)panStartMousePos;
-        panOffset = panStartOffset + delta;
-        
-        ApplyTransform();
-        evt.StopPropagation();
-    }
-
-    private void OnPointerUp(PointerUpEvent evt)
-    {
-        if (isPanning && viewport.HasPointerCapture(evt.pointerId))
+        // --- НОВОЕ: Метод правильной конвертации координат ---
+        public Vector2 ScreenToWorkspace(Vector2 screenPosition)
         {
-            isPanning = false;
-            viewport.ReleasePointer(evt.pointerId);
+            return (screenPosition - panOffset) / currentZoom;
+        }
+
+        private void OnPointerDown(PointerDownEvent evt)
+        {
+            if (evt.button == 2)
+            {
+                isPanning = true;
+                panStartMousePos = evt.position;
+                panStartOffset = panOffset;
+                viewport.CapturePointer(evt.pointerId);
+                evt.StopPropagation();
+            }
+        }
+
+        private void OnPointerMove(PointerMoveEvent evt)
+        {
+            if (!isPanning || !viewport.HasPointerCapture(evt.pointerId)) return;
+            Vector2 delta = evt.position - (Vector3)panStartMousePos;
+            panOffset = panStartOffset + delta;
+            ApplyTransform();
             evt.StopPropagation();
         }
-    }
 
-    private void OnWheel(WheelEvent evt)
-    {
-        // Позиция мыши относительно вьюпорта
-        Vector2 mousePos = evt.localMousePosition; 
-        
-        float oldZoom = currentZoom;
-        
-        // evt.delta.y > 0 это скролл вниз (отдаление), < 0 скролл вверх (приближение)
-        float zoomDelta = -evt.delta.y * zoomSpeed;
-        currentZoom = Mathf.Clamp(currentZoom + zoomDelta, minZoom, maxZoom);
+        private void OnPointerUp(PointerUpEvent evt)
+        {
+            if (isPanning && viewport.HasPointerCapture(evt.pointerId))
+            {
+                isPanning = false;
+                viewport.ReleasePointer(evt.pointerId);
+                evt.StopPropagation();
+            }
+        }
 
-        // Математика зума к курсору
-        float ratio = currentZoom / oldZoom;
-        panOffset = mousePos - (mousePos - panOffset) * ratio;
+        private void OnWheel(WheelEvent evt)
+        {
+            Vector2 mousePos = evt.localMousePosition; 
+            float oldZoom = currentZoom;
+            
+            float zoomDelta = -evt.delta.y * zoomSpeed;
+            currentZoom = Mathf.Clamp(currentZoom + zoomDelta, minZoom, maxZoom);
 
-        ApplyTransform();
-        evt.StopPropagation();
-    }
+            float ratio = currentZoom / oldZoom;
+            panOffset = mousePos - (mousePos - panOffset) * ratio;
 
-    private void ApplyTransform()
-    {
-        // Применяем позицию и масштаб к контейнеру
-        ContentContainer.transform.position = panOffset;
-        ContentContainer.transform.scale = new Vector3(currentZoom, currentZoom, 1f);
+            ApplyTransform();
+            evt.StopPropagation();
+        }
+
+        private void ApplyTransform()
+        {
+            ContentContainer.transform.position = panOffset;
+            ContentContainer.transform.scale = new Vector3(currentZoom, currentZoom, 1f);
+        }
     }
 }

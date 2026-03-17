@@ -9,6 +9,11 @@ namespace SimVent.Systems
     [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
     public partial struct ActuatorSystem : ISystem
     {
+        public void OnCreate(ref SystemState state)
+        {
+            state.RequireForUpdate<SimulationTimeComponent>();
+        }
+        
         public void OnUpdate(ref SystemState state)
         {
             // Получаем наш симуляционный шаг (например, 0.02 секунды)
