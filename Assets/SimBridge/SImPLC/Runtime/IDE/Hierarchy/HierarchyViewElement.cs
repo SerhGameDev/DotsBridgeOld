@@ -22,7 +22,7 @@ namespace IDE
 
         public abstract void SetName(string name);
         
-        public abstract void SetExecutionOrder(int order);
+        public virtual void SetExecutionOrder(int order){}
 
         private void OnClick(ClickEvent evt)
         {
