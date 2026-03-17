@@ -21,7 +21,8 @@ namespace IDE
             var root = uiDocument.rootVisualElement;
             
             _uiView = new IDEUIView(root, _hierarchyWindowTemplate, _fileTemplate, _folderTemplate);
-
+            _uiView.HierarchyView.RegisterBackgroundContextTrigger(root.Q<VisualElement>("hierarchy-container"));
+            _uiView.HierarchyView.RegisterBackgroundContextTrigger(root.Q<VisualElement>("hierarchy-scroll-view"));
             _hierarchyModel = new Hierarchy(_uiView.HierarchyView);
 
             _hierarchyModel.OnFileOpened += OnFileOpened;

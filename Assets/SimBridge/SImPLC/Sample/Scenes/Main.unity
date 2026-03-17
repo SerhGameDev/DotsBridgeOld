@@ -337,6 +337,8 @@ MonoBehaviour:
   _hierarchyWindowTemplate: {fileID: 9197481963319205126, guid: 94aad7359f789ea4aa184b9c7da4cce7, type: 3}
   _fileTemplate: {fileID: 9197481963319205126, guid: 7be790ae670005c4d89d69cec6b6023c, type: 3}
   _folderTemplate: {fileID: 9197481963319205126, guid: dc665c62441326c4f93f3b6fe164651b, type: 3}
+  _contextMenuTemplate: {fileID: 9197481963319205126, guid: b342b89b966f792458930c461411273a, type: 3}
+  _contextMenuItemTemplate: {fileID: 9197481963319205126, guid: 476da9ccc57f8824abfc5f78a688a2c4, type: 3}
 --- !u!1 &1261193531
 GameObject:
   m_ObjectHideFlags: 0

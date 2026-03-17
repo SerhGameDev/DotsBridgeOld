@@ -24,7 +24,26 @@ namespace IDE
         
         private readonly List<VisualElement> _pickList = new List<VisualElement>();
         
-        
+        public void RegisterBackgroundContextTrigger(VisualElement element)
+        {
+            if (element == null) return;
+    
+            // Регистрируем клик ПКМ на переданный элемент
+            element.RegisterCallback<PointerDownEvent>(evt => 
+            {
+                if (evt.button == 1) // ПКМ
+                {
+                    // Используем LocalToWorld, чтобы меню знало, где рисоваться на экране
+                    Vector2 panelPosition = element.LocalToWorld(evt.localPosition);
+            
+                    // Вызываем событие с null, что означает "клик по фону/общему пространству"
+                    OnItemContextRequested?.Invoke(null, panelPosition);
+            
+                    // Останавливаем событие, чтобы оно не дублировалось, если элементы вложены
+                    evt.StopPropagation();
+                }
+            });
+        }
         public HierarchyModelView(VisualElement root, VisualTreeAsset fileTemplate, VisualTreeAsset folderTemplate)
         {
             _fileTemplate = fileTemplate;
@@ -297,4 +316,5 @@ private string FindTargetIdRecursive(VisualElement element)
             _elements.Clear();
         }
     }
+    
 }
