@@ -28,7 +28,6 @@ namespace IDE
             if (_foldout != null) _foldout.text = name;
         }
 
-
         public void AddChild(HierarchyViewElement childElement)
         {
             _children.Add(childElement);
