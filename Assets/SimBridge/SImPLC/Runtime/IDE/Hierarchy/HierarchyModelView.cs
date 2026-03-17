@@ -6,17 +6,14 @@ namespace IDE
 {
     public class HierarchyModelView : IDisposable
     {
-        // Контейнер для скроллинга списка иерархии
         private const string ScrollViewName = "hierarchy-scroll-view";
 
         private readonly ScrollView _scrollView;
         private readonly VisualTreeAsset _fileTemplate;
         private readonly VisualTreeAsset _folderTemplate;
 
-        // Хранение всех элементов по Id для быстрого доступа (O(1) при поиске/удалении)
         private readonly Dictionary<string, HierarchyViewElement> _elements = new Dictionary<string, HierarchyViewElement>();
 
-        // События, которые будут слушаться главной Моделью (IdeWorkspace или Hierarchy Model)
         public event Action<string> OnItemSelected;
         public event Action<string> OnItemContextRequested;
 
@@ -48,11 +45,9 @@ namespace IDE
         {
             _elements[element.Data.Id] = element;
             
-            // Подписываемся на события дочернего элемента
             element.OnSelected += HandleItemSelected;
             element.OnContextRequested += HandleItemContextRequested;
 
-            // Если указан родитель и он является папкой — добавляем внутрь папки
             if (!string.IsNullOrEmpty(parentFolderId) && 
                 _elements.TryGetValue(parentFolderId, out var parentElement) && 
                 parentElement is HierarchyViewElementFolder folder)
