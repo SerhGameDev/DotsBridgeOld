@@ -76,11 +76,13 @@ namespace IDE
         private void AddElementToTree(HierarchyViewElement element, string parentFolderId)
         {
             _elements[element.Data.Id] = element;
-            
+    
             element.OnSelected += HandleItemSelected;
             element.OnContextRequested += HandleItemContextRequested;
+    
             var dragManipulator = new HierarchyDragManipulator(element, HandleDragStart, HandleDragUpdate, HandleDragEnd);
             element.Root.AddManipulator(dragManipulator);
+
             if (!string.IsNullOrEmpty(parentFolderId) && 
                 _elements.TryGetValue(parentFolderId, out var parentElement) && 
                 parentElement is HierarchyViewElementFolder folder)
@@ -89,7 +91,8 @@ namespace IDE
             }
             else
             {
-                _scrollView.Add(element.Root);
+                // ОШИБКА БЫЛА ТУТ: Нужно добавлять в contentContainer
+                _scrollView.contentContainer.Add(element.Root);
             }
         }
         private void HandleDragStart(HierarchyDragManipulator manipulator, Vector2 position)
@@ -114,9 +117,13 @@ namespace IDE
             if (_elements.TryGetValue(draggedId, out var draggedEl) && 
                 _elements.TryGetValue(targetId, out var targetEl))
             {
-                // Метод PlaceBehind ставит перетаскиваемый элемент визуально НИЖЕ целевого.
-                // Если вам больше нравится ставить ВЫШЕ, используйте PlaceInFront(targetEl.Root)
-                draggedEl.Root.PlaceBehind(targetEl.Root);
+                var parent = draggedEl.Root.parent;
+        
+                if (parent != null && parent == targetEl.Root.parent)
+                {
+                    int targetIndex = parent.IndexOf(targetEl.Root);
+                    parent.Insert(targetIndex, draggedEl.Root);
+                }
             }
         }
         private void HandleDragEnd(HierarchyDragManipulator manipulator, Vector2 position)
@@ -148,18 +155,15 @@ namespace IDE
             }
             else
             {
-                // Если был в корне, удаляем из контейнера скролла
                 _scrollView.contentContainer.Remove(element.Root);
             }
 
-            // 2. Добавляем в нового родителя
             if (!string.IsNullOrEmpty(newParentId) && _elements.TryGetValue(newParentId, out var newParent) && newParent is HierarchyViewElementFolder newFolder)
             {
                 newFolder.AddChild(element);
             }
             else
             {
-                // Добавляем в корень контейнера скролла
                 _scrollView.contentContainer.Add(element.Root);
             }
         }

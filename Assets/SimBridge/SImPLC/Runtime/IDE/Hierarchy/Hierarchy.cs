@@ -87,22 +87,21 @@ namespace IDE
         }
         private void HandleItemMoveRequested(string id, string targetId)
         {
-            if (id == targetId) return;
+            if (id == targetId || string.IsNullOrEmpty(id)) return;
 
             string newParentId = null;
-            bool droppedOnSibling = false; // Флаг, указывающий, что мы бросили на соседний элемент
+            bool isDroppedOnSibling = false;
 
-            // Определяем, куда бросили
             if (!string.IsNullOrEmpty(targetId) && _items.TryGetValue(targetId, out var targetItem))
             {
                 if (targetItem.IsFolder)
                 {
-                    newParentId = targetId; // Бросили на папку -> кладем внутрь
+                    newParentId = targetId;
                 }
                 else
                 {
-                    newParentId = targetItem.ParentId; // Бросили на файл -> кладем рядом
-                    droppedOnSibling = true;
+                    newParentId = targetItem.ParentId; 
+                    isDroppedOnSibling = true; // Мы бросили файл на другой файл
                 }
             }
 
@@ -110,12 +109,12 @@ namespace IDE
             {
                 string oldParentId = draggedItem.ParentId;
 
-                // Если родитель не изменился, но мы бросили объект на соседний файл — меняем их визуальный порядок
-                if (oldParentId == newParentId && droppedOnSibling)
+                // Если бросили в ту же папку на соседа — переставляем
+                if (oldParentId == newParentId && isDroppedOnSibling)
                 {
                     _view.ReorderElement(id, targetId);
                 }
-                // Если родитель изменился — переносим физически в другую папку
+                // Если папки разные — переносим
                 else if (oldParentId != newParentId)
                 {
                     MoveItem(id, newParentId);

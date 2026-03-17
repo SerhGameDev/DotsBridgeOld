@@ -31,9 +31,10 @@ namespace IDE
 
         private void PopulateTestData()
         {
+            string mainFolderId = _hierarchyModel.CreateFolder("Main Scripts");
             
-            _hierarchyModel.CreateFile("PlayerNode");
-            _hierarchyModel.CreateFile("WeaponNode");
+            _hierarchyModel.CreateFile("PlayerNode", mainFolderId);
+            _hierarchyModel.CreateFile("WeaponNode", mainFolderId);
 
             _hierarchyModel.CreateFile("GameManagerNode");
         }
