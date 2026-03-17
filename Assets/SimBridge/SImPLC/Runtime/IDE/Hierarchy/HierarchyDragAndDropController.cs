@@ -38,7 +38,20 @@ namespace IDE
             _scrollView.panel.visualTree.Add(_dragGhost);
             UpdateGhostPosition(position);
         }
-
+        
+        public void Attach(HierarchyViewElement element)
+        {
+            // Создаем манипулятор и передаем ему ссылки на методы обработки этого контроллера
+            var dragManipulator = new HierarchyDragManipulator(
+                element, 
+                HandleDragStart, 
+                HandleDragUpdate, 
+                HandleDragEnd
+            );
+    
+            // Навешиваем манипулятор на корень визуального элемента
+            element.Root.AddManipulator(dragManipulator);
+        }
         public void HandleDragUpdate(HierarchyDragManipulator manipulator, Vector2 position)
         {
             UpdateGhostPosition(position);

@@ -51,22 +51,6 @@ namespace IDE
             return id;
         }
 
-        public void RemoveItem(string id)
-        {
-            if (_items.Remove(id))
-            {
-                _view.RemoveElement(id);
-                
-                if (CurrentSelectedId == id)
-                {
-                    CurrentSelectedId = null;
-                    OnSelectionChanged?.Invoke(null);
-                }
-                
-                OnItemRemoved?.Invoke(id);
-            }
-        }
-
         private void HandleItemSelected(string id)
         {
             if (CurrentSelectedId != id)
