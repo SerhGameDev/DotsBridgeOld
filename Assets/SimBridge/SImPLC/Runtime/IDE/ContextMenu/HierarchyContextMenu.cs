@@ -15,7 +15,6 @@ namespace IDE
             _hierarchyModel = hierarchyModel;
         }
 
-        // Метод для вызова меню с указанием того, по какому файлу/папке кликнули
         public void ShowContextMenu(Vector2 position, string targetId)
         {
             _currentTargetId = targetId;
@@ -24,11 +23,20 @@ namespace IDE
 
         protected override List<ContextMenuAction> GetActions()
         {
-            return new List<ContextMenuAction>
+            var actions = new List<ContextMenuAction>
             {
                 new ContextMenuAction("Create File", () => _hierarchyModel.CreateFile("New File", _currentTargetId)),
                 new ContextMenuAction("Create Folder", () => _hierarchyModel.CreateFolder("New Folder", _currentTargetId))
             };
+
+            // Если кликнули по конкретному элементу (не по фону) — добавляем опции управления
+            if (!string.IsNullOrEmpty(_currentTargetId))
+            {
+                actions.Add(new ContextMenuAction("Rename", () => _hierarchyModel.TriggerRename(_currentTargetId)));
+                actions.Add(new ContextMenuAction("Delete", () => _hierarchyModel.RemoveItem(_currentTargetId)));
+            }
+
+            return actions;
         }
     }
 }

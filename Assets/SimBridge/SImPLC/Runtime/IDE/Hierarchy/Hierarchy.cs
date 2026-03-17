@@ -22,7 +22,7 @@ namespace IDE
         {
             _view = view;
             _view.OnItemMoveRequested += HandleItemMoveRequested;
-            
+            _view.OnItemRenamed += HandleItemRenamed;
             _view.OnItemSelected += HandleItemSelected;
             _view.OnItemContextRequested += HandleItemContextRequested;
         }
@@ -38,7 +38,51 @@ namespace IDE
             OnItemCreated?.Invoke(id);
             return id;
         }
+        public void TriggerRename(string id) => _view.StartRename(id);
 
+        private void HandleItemRenamed(string id, string newName)
+        {
+            if (_items.TryGetValue(id, out var item) && item is HierarchyItemData data)
+            {
+                data.Name = newName;
+                _view.UpdateItemName(id, newName);
+            }
+        }
+
+        public void RemoveItem(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return;
+            RemoveItemRecursive(id);
+        }
+
+        private void RemoveItemRecursive(string id)
+        {
+            if (!_items.TryGetValue(id, out var item)) return;
+
+            // Сначала находим и удаляем всех детей (если это папка)
+            var childrenIds = new List<string>();
+            foreach (var kvp in _items)
+            {
+                if (kvp.Value.ParentId == id) childrenIds.Add(kvp.Key);
+            }
+
+            foreach (var childId in childrenIds)
+            {
+                RemoveItemRecursive(childId);
+            }
+
+            // Удаляем сам элемент
+            _items.Remove(id);
+            _view.RemoveElement(id);
+            
+            if (CurrentSelectedId == id)
+            {
+                CurrentSelectedId = null;
+                OnSelectionChanged?.Invoke(null);
+            }
+            
+            OnItemRemoved?.Invoke(id);
+        }
         public string CreateFolder(string name, string parentFolderId = null)
         {
             string id = Guid.NewGuid().ToString();
@@ -139,6 +183,7 @@ namespace IDE
         }
         public void Dispose()
         {
+            _view.OnItemRenamed -= HandleItemRenamed;
             _view.OnItemMoveRequested -= HandleItemMoveRequested;
             _view.OnItemSelected -= HandleItemSelected;
             _view.OnItemContextRequested -= HandleItemContextRequested;

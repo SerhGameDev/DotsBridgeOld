@@ -7,19 +7,17 @@ namespace IDE
 {
     public class HierarchyModelView : IDisposable
     {
-        // Хранилище данных и элементов
         private readonly Dictionary<string, HierarchyViewElement> _elements = new Dictionary<string, HierarchyViewElement>();
 
-        // Модули-помощники
         private readonly HierarchyRenderer _renderer;
         private readonly HierarchySelectionModel _selectionModel;
         private readonly HierarchyDragAndDropController _dndController;
         private readonly HierarchyInteractionHandler _interactionHandler;
 
-        // Проброс событий для внешней Модели (Hierarchy.cs)
         public event Action<string> OnItemSelected;
         public event Action<string, Vector2> OnItemContextRequested;
         public event Action<string, string> OnItemMoveRequested;
+        public event Action<string, string> OnItemRenamed;
 
         public HierarchyModelView(VisualElement root, VisualTreeAsset fileTemplate, VisualTreeAsset folderTemplate)
         {
@@ -35,11 +33,30 @@ namespace IDE
             _interactionHandler.OnItemSelected += id => OnItemSelected?.Invoke(id);
             _interactionHandler.OnContextRequested += (id, pos) => OnItemContextRequested?.Invoke(id, pos);
             _dndController.OnItemMoveRequested += (id, targetId) => OnItemMoveRequested?.Invoke(id, targetId);
+            _interactionHandler.OnItemRenamed += (id, newName) => OnItemRenamed?.Invoke(id, newName);
 
             // Регистрация глобальных зон клика
             _interactionHandler.RegisterBackground(scrollView);
         }
+        public void StartRename(string id)
+        {
+            if (_elements.TryGetValue(id, out var el)) el.StartRename();
+        }
 
+        public void UpdateItemName(string id, string newName)
+        {
+            if (_elements.TryGetValue(id, out var el)) el.SetName(newName);
+        }
+
+        public void RemoveElement(string id)
+        {
+            if (_elements.TryGetValue(id, out var element))
+            {
+                _renderer.RemoveFromTree(element);
+                _elements.Remove(id);
+                element.Dispose();
+            }
+        }
         public void AddFile(IHierarchyItemData data, string parentFolderId = null)
         {
             var element = _renderer.CreateFileElement(data);

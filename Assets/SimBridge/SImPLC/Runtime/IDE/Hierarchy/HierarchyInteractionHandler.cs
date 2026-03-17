@@ -8,11 +8,13 @@ namespace IDE
     {
         public event Action<string> OnItemSelected;
         public event Action<string, Vector2> OnContextRequested;
+        public event Action<string, string> OnItemRenamed;
 
         public void RegisterElement(HierarchyViewElement element)
         {
             element.OnSelected += id => OnItemSelected?.Invoke(element.Data.Id);
             element.OnContextRequested += (el, pos) => OnContextRequested?.Invoke(el.Data.Id, pos);
+            element.OnRenameCommitted += (el, newName) => OnItemRenamed?.Invoke(el.Data.Id, newName);
         }
 
         public void RegisterBackground(VisualElement bgElement)
