@@ -22,11 +22,21 @@ namespace IDE
             Root.userData = data.Id;
             
             Root.RegisterCallback<ClickEvent>(OnClick);
-            Root.RegisterCallback<ContextClickEvent>(OnContextClick);
+            Root.RegisterCallback<PointerDownEvent>(OnPointerDownRightClick);
         }
 
         public abstract void SetName(string name);
         public virtual void SetExecutionOrder(int order){}
+        private void OnPointerDownRightClick(PointerDownEvent evt)
+        {
+            // button == 1 означает клик правой кнопкой мыши
+            if (evt.button == 1)
+            {
+                Vector2 panelPosition = Root.LocalToWorld(evt.localPosition);
+                OnContextRequested?.Invoke(this, panelPosition);
+                evt.StopPropagation();
+            }
+        }
 
         // Управление визуальным состоянием выделения
         public void SetSelectedState(bool isSelected)

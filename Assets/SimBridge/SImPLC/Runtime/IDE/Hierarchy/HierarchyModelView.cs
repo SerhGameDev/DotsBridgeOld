@@ -32,7 +32,19 @@ namespace IDE
             
             _scrollView = root.Q<ScrollView>(ScrollViewName);
             _scrollView.RegisterCallback<ContextClickEvent>(OnBackgroundContextClick);
+            _scrollView.RegisterCallback<PointerDownEvent>(OnBackgroundPointerDown);
         }
+        private void OnBackgroundPointerDown(PointerDownEvent evt)
+        {
+            if (evt.button == 1)
+            {
+                Vector2 panelPosition = _scrollView.LocalToWorld(evt.localPosition);
+                // Передаем null, так как кликнули не по конкретному файлу
+                OnItemContextRequested?.Invoke(null, panelPosition);
+                evt.StopPropagation();
+            }
+        }
+
         private void OnBackgroundContextClick(ContextClickEvent evt)
         {
             Vector2 panelPosition = _scrollView.LocalToWorld(evt.localMousePosition);

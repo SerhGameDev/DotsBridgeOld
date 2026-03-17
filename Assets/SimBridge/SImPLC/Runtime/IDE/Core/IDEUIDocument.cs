@@ -42,6 +42,7 @@ namespace IDE
         }
         private void HandleContextRequested(string id, Vector2 position)
         {
+            Debug.Log($"[IDE] Context Requested: {id}");
             _contextMenu.ShowContextMenu(position, id);
         }
 
