@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
 using UnityEngine;
 
 namespace IDE
@@ -18,7 +20,7 @@ namespace IDE
         public event Action<string> OnSelectionChanged;
         public event Action<string, Vector2> OnItemContextRequested;
         public event Action<string> OnFileOpened;
-
+        private static readonly Regex InvalidNameChars = new Regex(@"[\/\\:?*""<>|]");
         public Hierarchy(HierarchyModelView view)
         {
             _view = view;
@@ -42,7 +44,43 @@ namespace IDE
             OnItemCreated?.Invoke(id);
             return id;
         }
+        private void HandleItemRenamed(string id, string newName)
+        {
+            if (!_items.TryGetValue(id, out var item) || item is not HierarchyItemData data) return;
 
+            string validatedName = newName.Trim();
+
+            // 1. Проверка на пустую строку или некорректные символы
+            if (string.IsNullOrEmpty(validatedName) || InvalidNameChars.IsMatch(validatedName))
+            {
+                UnityEngine.Debug.LogWarning("[Hierarchy] Invalid characters in name.");
+                _view.UpdateItemName(id, data.Name); // Сброс в UI на старое имя
+                return;
+            }
+
+            // 2. Проверка на дубликаты среди "соседей" (в той же папке)
+            bool isDuplicate = _items.Values.Any(x => 
+                x.ParentId == data.ParentId && 
+                x.Id != id && 
+                x.Name.Equals(validatedName, System.StringComparison.OrdinalIgnoreCase));
+
+            if (isDuplicate)
+            {
+                UnityEngine.Debug.LogWarning("[Hierarchy] A file with this name already exists in this folder.");
+                _view.UpdateItemName(id, data.Name); // Сброс в UI
+                return;
+            }
+
+            // 3. Успешное переименование
+            data.Name = validatedName;
+            _view.UpdateItemName(id, validatedName);
+
+            // Синхронизация с рабочей областью
+            if (_workAreas.TryGetValue(id, out var workArea))
+            {
+                workArea.Rename(validatedName);
+            }
+        }
         private void HandleItemDoubleClicked(string id)
         {
             // Пытаемся открыть рабочую область, если это файл (у папок нет WorkArea)
@@ -62,14 +100,6 @@ namespace IDE
         }
         public void TriggerRename(string id) => _view.StartRename(id);
 
-        private void HandleItemRenamed(string id, string newName)
-        {
-            if (_items.TryGetValue(id, out var item) && item is HierarchyItemData data)
-            {
-                data.Name = newName;
-                _view.UpdateItemName(id, newName);
-            }
-        }
 
         private void RemoveItemRecursive(string id)
         {
@@ -197,6 +227,10 @@ namespace IDE
             }
             return false;
         }
+        public WorkArea GetWorkArea(string id)
+        {
+            return _workAreas.TryGetValue(id, out var workArea) ? workArea : null;
+        }
         public void Dispose()
         {
             _view.OnItemRenamed -= HandleItemRenamed;
@@ -205,5 +239,6 @@ namespace IDE
             _view.OnItemContextRequested -= HandleItemContextRequested;
             _items.Clear();
         }
+
     }
 }

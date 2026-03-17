@@ -12,6 +12,7 @@ namespace IDE
         [SerializeField] private VisualTreeAsset _folderTemplate;
         [SerializeField] private VisualTreeAsset _contextMenuTemplate;
         [SerializeField] private VisualTreeAsset _contextMenuItemTemplate;
+        private WorkspaceRenderer _workspaceRenderer;
         private IDEUIView _uiView;
         private Hierarchy _hierarchyModel;
         private HierarchyContextMenu _contextMenu;
@@ -23,12 +24,23 @@ namespace IDE
             _uiView = new IDEUIView(root, _hierarchyWindowTemplate, _fileTemplate, _folderTemplate);
             _uiView.HierarchyView.RegisterBackgroundContextTrigger(root.Q<VisualElement>("hierarchy-container"));
             _uiView.HierarchyView.RegisterBackgroundContextTrigger(root.Q<VisualElement>("hierarchy-scroll-view"));
+            var workspaceContainer = root.Q<VisualElement>("workspace-container");
+            
             _hierarchyModel = new Hierarchy(_uiView.HierarchyView);
-
+            _workspaceRenderer = new WorkspaceRenderer(workspaceContainer);
+            _contextMenu = new HierarchyContextMenu(root, _contextMenuTemplate, _contextMenuItemTemplate, _hierarchyModel);
+            
             _hierarchyModel.OnFileOpened += OnFileOpened;
             _hierarchyModel.OnSelectionChanged += OnSelectionChanged;
-            _contextMenu = new HierarchyContextMenu(root, _contextMenuTemplate, _contextMenuItemTemplate, _hierarchyModel);
             _hierarchyModel.OnItemContextRequested += HandleContextRequested;
+            
+            _hierarchyModel.OnFileOpened += id => 
+            {
+                // Нам нужно получить WorkArea по ID из иерархии
+                // Для этого в классе Hierarchy добавьте публичный метод GetWorkArea(id)
+                var area = _hierarchyModel.GetWorkArea(id);
+                if (area != null) _workspaceRenderer.Render(area);
+            };
             PopulateTestData();
         }
 
