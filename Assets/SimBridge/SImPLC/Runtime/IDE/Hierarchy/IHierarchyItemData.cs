@@ -6,5 +6,6 @@ namespace IDE
         string Name { get; }
         int ExecutionOrder { get; }
         bool IsFolder { get; }
+        string ParentId { get; } 
     }
 }

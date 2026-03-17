@@ -7,7 +7,7 @@ namespace IDE
     {
         private readonly HierarchyModelView _view;
         private readonly Dictionary<string, IHierarchyItemData> _items = new Dictionary<string, IHierarchyItemData>();
-        
+        public event Action<string, string> OnItemMoved;
         private int _nextExecutionOrder = 1;
         public string CurrentSelectedId { get; private set; }
 
@@ -20,6 +20,7 @@ namespace IDE
         public Hierarchy(HierarchyModelView view)
         {
             _view = view;
+            _view.OnItemMoveRequested += HandleItemMoveRequested;
             
             _view.OnItemSelected += HandleItemSelected;
             _view.OnItemContextRequested += HandleItemContextRequested;
@@ -28,7 +29,7 @@ namespace IDE
         public string CreateFile(string name, string parentFolderId = null)
         {
             string id = Guid.NewGuid().ToString();
-            var fileData = new HierarchyItemData(id, name, false, _nextExecutionOrder++);
+            var fileData = new HierarchyItemData(id, name, false, parentFolderId, _nextExecutionOrder++);
             
             _items.Add(id, fileData);
             _view.AddFile(fileData, parentFolderId);
@@ -40,7 +41,7 @@ namespace IDE
         public string CreateFolder(string name, string parentFolderId = null)
         {
             string id = Guid.NewGuid().ToString();
-            var folderData = new HierarchyItemData(id, name, true);
+            var folderData = new HierarchyItemData(id, name, true, parentFolderId);
             
             _items.Add(id, folderData);
             _view.AddFolder(folderData, parentFolderId);
@@ -84,9 +85,60 @@ namespace IDE
         {
             OnItemContextRequested?.Invoke(id);
         }
+        private void HandleItemMoveRequested(string id, string targetId)
+        {
+            if (id == targetId) return;
 
+            string newParentId = null;
+
+            if (!string.IsNullOrEmpty(targetId) && _items.TryGetValue(targetId, out var targetItem))
+            {
+                if (targetItem.IsFolder)
+                {
+                    newParentId = targetId;
+                }
+                else
+                {
+                    newParentId = targetItem.ParentId; 
+                }
+            }
+
+            MoveItem(id, newParentId);
+        }
+
+        public void MoveItem(string id, string newParentId)
+        {
+            if (_items.TryGetValue(id, out var item) && item is HierarchyItemData data)
+            {
+                string oldParentId = data.ParentId;
+                if (oldParentId == newParentId) return;
+
+                if (item.IsFolder && IsDescendantOf(newParentId, id)) return;
+
+                data.ParentId = newParentId;
+                _view.MoveElement(id, newParentId, oldParentId);
+        
+                OnItemMoved?.Invoke(id, newParentId);
+            }
+        }
+
+        private bool IsDescendantOf(string potentialChildId, string ancestorId)
+        {
+            string currentId = potentialChildId;
+            while (!string.IsNullOrEmpty(currentId))
+            {
+                if (currentId == ancestorId) return true;
+        
+                if (_items.TryGetValue(currentId, out var item))
+                    currentId = item.ParentId;
+                else
+                    break;
+            }
+            return false;
+        }
         public void Dispose()
         {
+            _view.OnItemMoveRequested -= HandleItemMoveRequested;
             _view.OnItemSelected -= HandleItemSelected;
             _view.OnItemContextRequested -= HandleItemContextRequested;
             _items.Clear();

@@ -18,7 +18,8 @@ namespace IDE
         {
             Root = rootElement;
             Data = data;
-
+            Root.userData = data.Id;
+            
             Root.RegisterCallback<ClickEvent>(OnClick);
             Root.RegisterCallback<ContextClickEvent>(OnContextClick);
         }
