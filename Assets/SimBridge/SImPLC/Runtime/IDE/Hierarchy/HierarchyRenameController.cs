@@ -35,7 +35,6 @@ namespace IDE
 
             bool isDone = false;
             
-            // Локальная функция завершения
             Action commit = () => {
                 if (isDone) return;
                 isDone = true;

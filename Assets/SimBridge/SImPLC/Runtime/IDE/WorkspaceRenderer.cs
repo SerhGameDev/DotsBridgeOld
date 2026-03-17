@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Linq;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace IDE
@@ -6,23 +7,25 @@ namespace IDE
     public class WorkspaceRenderer
     {
         private readonly VisualElement _container;
+        private readonly VisualTreeAsset _nodeTemplate;
+        
         private WorkArea _currentWorkArea;
         
         private readonly WorkspaceGrid _grid;
         private readonly VisualElement _nodeContainer;
 
-        public WorkspaceRenderer(VisualElement container)
+        public WorkspaceRenderer(VisualElement container, VisualTreeAsset nodeTemplate)
         {
             _container = container;
+            _nodeTemplate = nodeTemplate;
+            
             _container.style.flexGrow = 1;
-            _container.style.overflow = Overflow.Hidden; // Обрезаем элементы, выходящие за край
+            _container.style.overflow = Overflow.Hidden;
             _container.style.backgroundColor = new Color(0.12f, 0.12f, 0.12f, 1f);
 
-            // 1. Добавляем фон-сетку
             _grid = new WorkspaceGrid();
             _container.Add(_grid);
 
-            // 2. Добавляем контейнер для нод поверх сетки
             _nodeContainer = new VisualElement();
             _nodeContainer.style.flexGrow = 1;
             _nodeContainer.style.position = Position.Absolute;
@@ -34,15 +37,25 @@ namespace IDE
         public void Render(WorkArea workArea)
         {
             if (_currentWorkArea == workArea) return;
+
+            // Отписываемся от старой рабочей области, если она была
+            if (_currentWorkArea != null)
+            {
+                _currentWorkArea.OnNodeAdded -= DrawNode;
+                _currentWorkArea.OnNodeRemoved -= EraseNode;
+            }
+
             _currentWorkArea = workArea;
-            
-            // Очищаем старые ноды при переключении файла
             _nodeContainer.Clear();
 
-            if (workArea == null) return;
+            if (_currentWorkArea == null) return;
 
-            // Рисуем новые ноды
-            foreach (var nodeData in workArea.Nodes)
+            // Подписываемся на новую рабочую область
+            _currentWorkArea.OnNodeAdded += DrawNode;
+            _currentWorkArea.OnNodeRemoved += EraseNode;
+
+            // Отрисовываем существующие ноды
+            foreach (var nodeData in _currentWorkArea.Nodes)
             {
                 DrawNode(nodeData);
             }
@@ -50,33 +63,32 @@ namespace IDE
 
         private void DrawNode(Node nodeData)
         {
-            // Создаем визуальную карточку ноды
-            var nodeVisual = new VisualElement();
+            // Создаем из UXML
+            var nodeVisual = _nodeTemplate.Instantiate();
+            
+            // Настраиваем позиционирование корня UXML
             nodeVisual.style.position = Position.Absolute;
             nodeVisual.style.left = nodeData.Position.x;
             nodeVisual.style.top = nodeData.Position.y;
             
-            // Базовый дизайн ноды прямо в коде (позже можно вынести в USS или UXML)
-            nodeVisual.style.backgroundColor = new Color(0.22f, 0.22f, 0.22f, 1f);
-            nodeVisual.style.borderTopColor = nodeVisual.style.borderBottomColor = 
-            nodeVisual.style.borderLeftColor = nodeVisual.style.borderRightColor = new Color(0.1f, 0.1f, 0.1f, 1f);
-            nodeVisual.style.borderTopWidth = nodeVisual.style.borderBottomWidth = 
-            nodeVisual.style.borderLeftWidth = nodeVisual.style.borderRightWidth = 1;
-            nodeVisual.style.borderTopLeftRadius = nodeVisual.style.borderTopRightRadius = 
-            nodeVisual.style.borderBottomLeftRadius = nodeVisual.style.borderBottomRightRadius = 6;
-            nodeVisual.style.paddingTop = nodeVisual.style.paddingBottom = 8;
-            nodeVisual.style.paddingLeft = nodeVisual.style.paddingRight = 12;
-            nodeVisual.style.minWidth = 120;
-            nodeVisual.style.minHeight = 40;
+            // Записываем ID в userData, чтобы потом легко найти элемент для удаления
+            nodeVisual.userData = nodeData.Id;
 
-            // Заголовок ноды
-            var title = new Label(nodeData.Name);
-            title.style.color = Color.white;
-            title.style.unityTextAlign = TextAnchor.MiddleCenter;
-            title.style.unityFontStyleAndWeight = FontStyle.Bold;
-            
-            nodeVisual.Add(title);
+            // Настраиваем данные
+            var title = nodeVisual.Q<Label>("node-title");
+            if (title != null) title.text = nodeData.Name;
+
             _nodeContainer.Add(nodeVisual);
+        }
+
+        private void EraseNode(string nodeId)
+        {
+            // Ищем визуальный элемент по ID и удаляем его со сцены
+            var nodeVisual = _nodeContainer.Children().FirstOrDefault(x => x.userData as string == nodeId);
+            if (nodeVisual != null)
+            {
+                _nodeContainer.Remove(nodeVisual);
+            }
         }
     }
 }
