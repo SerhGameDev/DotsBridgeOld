@@ -119,12 +119,20 @@ namespace IDE
 
             if (position == Vector2.zero) return;
 
-            elementRoot.pickingMode = PickingMode.Ignore;
+            // ВАЖНО: Полностью скрываем элемент, чтобы луч точно пролетел сквозь все 
+            // дочерние Label и иконки, которые иначе перехватили бы panel.Pick.
+            var initialDisplay = elementRoot.style.display;
+            elementRoot.style.display = DisplayStyle.None;
 
+            // Поиск цели (папки или файла) под курсором
             var pickedElement = _scrollView.panel.Pick(position);
             string targetId = FindTargetIdRecursive(pickedElement);
 
-            elementRoot.pickingMode = PickingMode.Position;
+            // Возвращаем видимость элемента
+            elementRoot.style.display = initialDisplay;
+
+            // Для отладки (чтобы убедиться, что цель найдена верно)
+             Debug.Log($"[DragAndDrop] Dragged: {manipulator.Element.Data.Id}, Target: {targetId}");
 
             OnItemMoveRequested?.Invoke(manipulator.Element.Data.Id, targetId);
         }
