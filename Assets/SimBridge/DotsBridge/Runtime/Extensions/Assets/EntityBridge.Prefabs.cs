@@ -6,7 +6,7 @@ namespace DotsBridge
 {
     public static partial class EntityBridge
     { 
-        private static Entity GetPrefab(this BridgeWorld world, string name)
+        public static Entity GetPrefab(this BridgeWorld world, string name)
         {
             if (world == null)
             {
