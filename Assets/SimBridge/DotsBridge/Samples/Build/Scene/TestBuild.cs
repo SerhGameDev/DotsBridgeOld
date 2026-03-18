@@ -6,7 +6,7 @@ public class TestBuild : MonoBehaviour
 {
     private void Start()
     {
-        var clientWorld = EntityBridge.InClientWorld();
+        var clientWorld = EntityBridge.InCurrentWorld();
 
 // Инициализируем (один раз)
         clientWorld.InitializeGrid(2.0f);
@@ -21,8 +21,4 @@ public class TestBuild : MonoBehaviour
             .Spawn("BuildCommand_Tile_01");
     }
 
-}
-
-internal struct TerrainTag
-{
 }

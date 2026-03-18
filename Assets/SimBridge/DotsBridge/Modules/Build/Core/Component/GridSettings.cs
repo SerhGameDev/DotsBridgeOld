@@ -1,3 +1,4 @@
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 
@@ -28,6 +29,9 @@ namespace DotsBridge.Build
             ));
         }
     }
-
+    public struct SpatialGridData : IComponentData
+    {
+        public NativeParallelMultiHashMap<int3, Entity> Map;
+    }
     public struct FloorTag : IComponentData { }
 }
