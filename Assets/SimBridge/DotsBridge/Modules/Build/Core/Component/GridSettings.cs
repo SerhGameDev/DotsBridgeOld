@@ -11,22 +11,17 @@ namespace DotsBridge.Build
 
     public struct GridPosition : IComponentData
     {
-        public int3 Value;
+        public float3 PrecisionPos; // Точная позиция для визуала и снаппинга
+        public int3 GridIndex;      // Индекс в пространственной карте
 
-        public GridPosition(int3 position) => Value = position;
-
-        public float3 ToWorldPosition(float cellSize)
+        public GridPosition(float3 worldPos, float cellSize)
         {
-            return new float3(Value.x, Value.y, Value.z) * cellSize;
-        }
-
-        public static GridPosition FromWorldPosition(float3 worldPos, float cellSize)
-        {
-            return new GridPosition(new int3(
+            PrecisionPos = worldPos;
+            GridIndex = new int3(
                 (int)math.round(worldPos.x / cellSize),
                 (int)math.round(worldPos.y / cellSize),
                 (int)math.round(worldPos.z / cellSize)
-            ));
+            );
         }
     }
     public struct SpatialGridData : IComponentData

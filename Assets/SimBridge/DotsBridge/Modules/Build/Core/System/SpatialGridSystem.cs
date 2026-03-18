@@ -52,11 +52,9 @@ namespace DotsBridge.Build
         {
             public NativeParallelMultiHashMap<int3, Entity>.ParallelWriter GridMap;
 
-            // Job автоматически найдет все сущности с компонентом GridPosition
             public void Execute(Entity entity, in GridPosition gridPos)
             {
-                // Записываем сущность по её координате
-                GridMap.Add(gridPos.Value, entity);
+                GridMap.Add(gridPos.GridIndex, entity);
             }
         }
     }

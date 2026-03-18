@@ -2,6 +2,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 using DotsBridge.Build;
+using Unity.Transforms;
 
 namespace DotsBridge
 {
@@ -27,24 +28,45 @@ namespace DotsBridge
         }
 
         /// <summary>
-        /// Подготавливает SpawnerBuilder для пола с автоматическим снаппингом к сетке.
-        /// Возвращает билдер для дальнейшего вызова .SpawnAsync() или .Spawn().
+        /// Создает команду на строительство пола. 
+        /// Возвращает DotsCommand, которую можно дополнить и вызвать через .Execute()
         /// </summary>
-        public static SpawnerBuilder BuildFloor(this BridgeWorld world, string prefabName, float3 worldPosition)
+        public static DotsCommand BuildFloor(this BridgeWorld world, string prefabName, float3 position)
         {
             float cellSize = world.GetCellSize();
-            
-            // Вычисляем дискретную позицию и переводим обратно в ровные мировые координаты
-            var gridPos = GridPosition.FromWorldPosition(worldPosition, cellSize);
-            var snappedPos = gridPos.ToWorldPosition(cellSize);
-
-            // Используем твой внутренний метод поиска префаба
             var prefab = world.GetPrefab(prefabName);
+            
+            // Рассчитываем данные сетки заранее
+            var gridData = new GridPosition(position, cellSize);
+            // Снаппим позицию для трансформа (если нужно строгое выравнивание)
+            float3 snappedPos = new float3(gridData.GridIndex) * cellSize;
 
-            // Возвращаем настроенный билдер
-            return new SpawnerBuilder(world, prefab)
-                .SetPosition(snappedPos);
+            // Создаем команду
+            var command = new DotsCommand($"BuildFloor_{prefabName}");
+
+            // Настраиваем логику создания внутри команды
+            command.SetTargetResolver(() =>
+            {
+                // Используем твой ListEntity для создания
+                var batch = new ListEntity(world);
+                batch.Instantiate(prefab, 1);
+                
+                // Добавляем базовые компоненты строительства
+                batch.AddComponent(gridData);
+                batch.AddComponent<FloorTag>();
+                
+                // Устанавливаем трансформ
+                if (world.Manager.HasComponent<LocalTransform>(batch.Entities[0]))
+                {
+                    batch.TrySetComponent(LocalTransform.FromPosition(snappedPos));
+                }
+
+                return batch;
+            }, true);
+
+            return command;
         }
+    
 
         /// <summary>
         /// Перегрузка для точечного строительства по координатам сетки.
