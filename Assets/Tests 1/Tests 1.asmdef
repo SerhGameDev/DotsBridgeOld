@@ -1,16 +1,14 @@
 {
-    "name": "Tests",
+    "name": "Tests1",
     "rootNamespace": "",
     "references": [
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
         "Unity.Entities",
         "Unity.Mathematics",
-        "SimBridge",
-        "UniTask",
-        "Sirenix.OdinInspector.Modules.UnityMathematics",
+        "DotsBridge",
         "Unity.Collections",
-        "SimVent"
+        "Unity.Transforms"
     ],
     "includePlatforms": [
         "Editor"

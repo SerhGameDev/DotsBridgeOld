@@ -35,25 +35,25 @@ namespace DotsBridge.Build
                     End = snappedEnd, 
                     Thickness = thickness 
                 });
+                
                 world.Manager.AddComponent<WallTag>(wallEntity);
                 
                 // 3. Добавляем буфер для будущих соединений
                 world.Manager.AddBuffer<ConnectionElement>(wallEntity);
 
                 // 4. Настройка визуального трансформа (Позиция в центре + поворот вдоль линии)
-                float3 center = (snappedStart + snappedEnd) * 0.5f;
-                float3 direction = math.normalize(snappedEnd - snappedStart);
-                quaternion rotation = quaternion.LookRotationSafe(direction, math.up());
-                
-                // Длина стены для масштабирования (Scale.z или Scale.x зависит от вашего префаба)
-                float length = math.distance(snappedStart, snappedEnd);
-
-                world.Manager.SetComponentData(wallEntity, LocalTransform.FromPositionRotationScale(
-                    center, 
-                    rotation, 
-                    1f // Масштаб обычно настраивается через процедурный меш или шейдер, но можно и через Transform
-                ));
-
+                if (world.Manager.HasComponent<LocalTransform>(wallEntity))
+                {
+                    float3 center = (snappedStart + snappedEnd) * 0.5f;
+                    float3 direction = math.normalize(snappedEnd - snappedStart);
+                    quaternion rotation = quaternion.LookRotationSafe(direction, math.up());
+    
+                    world.Manager.SetComponentData(wallEntity, LocalTransform.FromPositionRotationScale(
+                        center, 
+                        rotation, 
+                        1f
+                    ));
+                }
                 // Добавляем в Spatial Hash по обоим концам для быстрого поиска соединений
                 var gridStart = new GridPosition(snappedStart, cellSize);
                 var gridEnd = new GridPosition(snappedEnd, cellSize);

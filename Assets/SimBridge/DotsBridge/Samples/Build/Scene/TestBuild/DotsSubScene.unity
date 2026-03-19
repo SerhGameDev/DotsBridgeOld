@@ -166,6 +166,8 @@ MonoBehaviour:
   Prefabs:
   - Name: Floor_Tile
     Prefab: {fileID: 166578754771070937, guid: 00de26ea3a028a74cb20c1b00eaedb50, type: 3}
+  - Name: WallPrefab
+    Prefab: {fileID: 8983653961358283199, guid: 61248e1da4e7bad4cb57ccea1416491e, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
