@@ -17,7 +17,10 @@ namespace DotsBridge.Placement
     /// Маркер "фантома". Показывает, что этот объект сейчас привязан к курсору 
     /// и еще не закреплен окончательно (не является частью симуляции).
     /// </summary>
-    public struct GhostTag : IComponentData { }
+    public struct GhostTag : IComponentData 
+    { 
+        public bool IsValid; 
+    }
 
     /// <summary>
     /// Настройки привязки к сетке (Snapping).

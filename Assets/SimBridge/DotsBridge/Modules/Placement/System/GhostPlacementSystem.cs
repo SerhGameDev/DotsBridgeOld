@@ -1,4 +1,5 @@
-﻿using Unity.Entities;
+﻿using Unity.Collections;
+using Unity.Entities;
 using Unity.Transforms;
 using Unity.Mathematics;
 using Unity.Physics;
@@ -12,61 +13,100 @@ namespace DotsBridge.Placement
     {
         protected override void OnUpdate()
         {
-            // Если в мире нет фантомов для размещения, система ничего не делает (оптимизация)
             if (SystemAPI.QueryBuilder().WithAll<GhostTag, LocalTransform>().Build().IsEmpty)
                 return;
 
-            // Получаем синглтон физического мира для рейкаста
             if (!SystemAPI.TryGetSingleton<PhysicsWorldSingleton>(out var physicsWorld))
                 return;
 
-            // Пускаем луч из камеры
             var camera = Camera.main;
             if (camera == null) return;
 
             var ray = camera.ScreenPointToRay(Input.mousePosition);
-            var input = new RaycastInput
-            {
-                Start = ray.origin,
-                End = ray.origin + ray.direction * 100f,
-                Filter = CollisionFilter.Default
-            };
-
-            float3 targetPos = float3.zero;
+            
+            float3 hitPos = float3.zero;
             float3 normal = math.up();
             bool hasValidSurface = false;
 
-            // Проверяем попадание
-            if (physicsWorld.CastRay(input, out RaycastHit hit))
+            var input = new RaycastInput
             {
-                // Проверяем, есть ли у объекта, в который мы попали, тег SurfaceTag
-                if (SystemAPI.HasComponent<SurfaceTag>(hit.Entity))
+                Start = ray.origin,
+                End = (float3)ray.origin + (float3)ray.direction * 100f,
+                Filter = CollisionFilter.Default
+            };
+
+            // 1. ИДЕАЛЬНЫЙ РЕЙКАСТ (Сбор всех попаданий)
+            // Создаем временный список для хранения всех объектов, пробитых лучом
+            var hits = new NativeList<RaycastHit>(Allocator.Temp);
+
+            if (physicsWorld.CollisionWorld.CastRay(input, ref hits))
+            {
+                float closestFraction = float.MaxValue;
+
+                // Перебираем все пробитые объекты
+                for (int i = 0; i < hits.Length; i++)
                 {
-                    targetPos = hit.Position;
-                    normal = hit.SurfaceNormal;
-                    hasValidSurface = true;
+                    var hit = hits[i];
+
+                    // Ищем объект с SurfaceTag, который находится ближе всего к камере
+                    if (SystemAPI.HasComponent<SurfaceTag>(hit.Entity) && hit.Fraction < closestFraction)
+                    {
+                        closestFraction = hit.Fraction;
+                        hitPos = hit.Position;
+                        normal = hit.SurfaceNormal;
+                        hasValidSurface = true;
+                    }
                 }
             }
+            
+            // Обязательно освобождаем память DOTS
+            hits.Dispose();
 
             if (!hasValidSurface) return;
 
-            // Обновляем позиции всех фантомов (обычно он один, но foreach работает надежно)
-            foreach (var (transform, snapSettings) in SystemAPI.Query<RefRW<LocalTransform>, RefRO<GridSnapSettings>>().WithAll<GhostTag>())
+            // 2. РАЗМЕЩЕНИЕ И ПРОВЕРКА НАЛОЖЕНИЙ
+            foreach (var (transform, snapSettings, ghostTag, entity) in SystemAPI.Query<RefRW<LocalTransform>, RefRO<GridSnapSettings>, RefRW<GhostTag>>().WithEntityAccess().WithAll<GhostTag>())
             {
-                float3 finalPos = targetPos;
+                float3 snapPos = hitPos;
 
-                // Логика привязки к сетке (Snapping)
                 if (snapSettings.ValueRO.IsEnabled && snapSettings.ValueRO.Step > 0)
                 {
-                    // Округляем позицию по шагу сетки
-                    finalPos = math.round(finalPos / snapSettings.ValueRO.Step) * snapSettings.ValueRO.Step;
+                    snapPos = math.round(snapPos / snapSettings.ValueRO.Step) * snapSettings.ValueRO.Step;
+                }
+
+                quaternion targetRotation = quaternion.LookRotationSafe(math.forward(), normal);
+                float3 finalPos = snapPos;
+
+                if (SystemAPI.HasComponent<PlacementPivot>(entity))
+                {
+                    var pivot = SystemAPI.GetComponent<PlacementPivot>(entity);
+                    finalPos += math.rotate(targetRotation, pivot.Value);
                 }
 
                 transform.ValueRW.Position = finalPos;
+                transform.ValueRW.Rotation = targetRotation;
 
-                // Ориентируем объект: вектор "вверх" объекта (Y) совпадает с нормалью поверхности
-                // Вектор "вперед" (Z) пока оставляем по умолчанию, либо можно задать кастомный
-                transform.ValueRW.Rotation = quaternion.LookRotationSafe(math.forward(), normal);
+                // --- ЛОГИКА ПРОВЕРКИ НАЛОЖЕНИЙ ---
+                bool isValid = true;
+                if (SystemAPI.HasComponent<PlacementBounds>(entity))
+                {
+                    var bounds = SystemAPI.GetComponent<PlacementBounds>(entity);
+                    
+                    foreach (var (otherTrans, otherBounds) in SystemAPI.Query<RefRO<LocalTransform>, RefRO<PlacementBounds>>()
+                        .WithAll<PlaceableTag>().WithNone<GhostTag>())
+                    {
+                        float3 diff = math.abs(finalPos - otherTrans.ValueRO.Position);
+                        float3 minAllowedDistance = (bounds.Size + otherBounds.ValueRO.Size) * 0.5f;
+
+                        if (diff.x < minAllowedDistance.x && diff.y < minAllowedDistance.y && diff.z < minAllowedDistance.z)
+                        {
+                            isValid = false;
+                            break;
+                        }
+                    }
+                }
+
+                ghostTag.ValueRW.IsValid = isValid;
             }
         }
     }
