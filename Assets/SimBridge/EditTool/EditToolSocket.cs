@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using UnityEngine;
 using Sirenix.OdinInspector;
+using System.Linq;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -17,9 +19,17 @@ namespace EditTool
 
     public class EditToolSocket : MonoBehaviour
     {
-        [Title("Настройки сокета")]
+        [TitleGroup("Настройки сокета")]
         [EnumToggleButtons]
         public SocketType socketType = SocketType.Default;
+
+        [TitleGroup("Настройки сокета")]
+        [Tooltip("Если на префабе несколько сокетов, этот флаг укажет, какой из них использовать для стыковки при спавне по умолчанию.")]
+        public bool isMainSpawnPoint = false;
+
+        [TitleGroup("Настройки иерархии")]
+        [Tooltip("Корневой объект, который будет перемещаться и поворачиваться при стыковке. Если оставить пустым, будет двигаться сам объект с сокетом.")]
+        public Transform rootTransform;
 
         [ShowInInspector, ReadOnly, TitleGroup("Состояние")]
         public EditToolSocket ConnectedSocket { get; private set; }
@@ -35,26 +45,32 @@ namespace EditTool
 
         [TitleGroup("Создание узла"), HideIf("IsConnected")]
         [Button("Присоединить объект", ButtonSizes.Medium), EnableIf("@prefabToSpawn != null")]
+        public static readonly HashSet<EditToolSocket> AllSockets = new HashSet<EditToolSocket>();
+
+        private void OnEnable()
+        {
+            AllSockets.Add(this);
+        }
+
+        private void OnDisable()
+        {
+            AllSockets.Remove(this);
+        }
         public void SpawnAndConnect()
         {
 #if UNITY_EDITOR
             if (prefabToSpawn == null) return;
 
-            // 1. Создаем объект как инстанс префаба и регистрируем для Ctrl+Z
             GameObject spawnedObj = (GameObject)PrefabUtility.InstantiatePrefab(prefabToSpawn);
             Undo.RegisterCreatedObjectUndo(spawnedObj, "Spawn and Connect EditTool Object");
 
-            // 2. Ищем встречный свободный сокет подходящего типа на созданном объекте
             EditToolSocket[] spawnedSockets = spawnedObj.GetComponentsInChildren<EditToolSocket>();
-            EditToolSocket targetSocket = null;
-
-            foreach (var s in spawnedSockets)
+            
+            // Сначала ищем сокет, помеченный как главный. Если такого нет - берем любой подходящий.
+            EditToolSocket targetSocket = spawnedSockets.FirstOrDefault(s => s.isMainSpawnPoint && CanConnectTo(s));
+            if (targetSocket == null)
             {
-                if (CanConnectTo(s))
-                {
-                    targetSocket = s;
-                    break;
-                }
+                targetSocket = spawnedSockets.FirstOrDefault(s => CanConnectTo(s));
             }
 
             if (targetSocket == null)
@@ -64,32 +80,29 @@ namespace EditTool
                 return;
             }
 
-            // 3. МАТЕМАТИКА ВЫРАВНИВАНИЯ (Ориентация и Позиция)
-            Transform rootTransform = spawnedObj.transform;
+            // Определяем, что именно мы будем двигать
+            Transform rootToMove = targetSocket.rootTransform != null ? targetSocket.rootTransform : spawnedObj.transform;
 
-            // Шаг А: Поворот. Целевой сокет должен смотреть прямо противоположно нашему.
-            // Используем Up-вектор текущего сокета, чтобы деталь не перекрутило по оси Z.
+            // 1. ПОВОРОТ
+            // Вычисляем нужный поворот так, чтобы целевой сокет смотрел в противоположную сторону от текущего
             Quaternion desiredSocketRotation = Quaternion.LookRotation(-this.Direction, this.transform.up);
-            
-            // Вычисляем разницу между текущим поворотом целевого сокета и желаемым
             Quaternion rotationDelta = desiredSocketRotation * Quaternion.Inverse(targetSocket.transform.rotation);
             
-            // Применяем этот поворот ко всему созданному объекту
-            rootTransform.rotation = rotationDelta * rootTransform.rotation;
+            // Применяем дельту поворота к корневому объекту
+            rootToMove.rotation = rotationDelta * rootToMove.rotation;
 
-            // Шаг Б: Позиция. Двигаем весь объект так, чтобы позиции сокетов совпали.
+            // 2. ПОЗИЦИЯ (Важно: вычисляем ПОСЛЕ поворота, так как позиция targetSocket изменилась)
             Vector3 positionDelta = this.transform.position - targetSocket.transform.position;
-            rootTransform.position += positionDelta;
+            rootToMove.position += positionDelta;
 
-            // 4. Фиксируем изменения в Undo и соединяем
+            // 3. СОЕДИНЕНИЕ И UNDO
             Undo.RecordObject(this, "Connect Socket");
             Undo.RecordObject(targetSocket, "Connect Target Socket");
             
             this.Connect(targetSocket);
 
-            // Очищаем поле, чтобы интерфейс переключился, и выделяем новый объект для удобства
             prefabToSpawn = null;
-            Selection.activeGameObject = spawnedObj;
+            Selection.activeGameObject = rootToMove.gameObject;
 #endif
         }
 
@@ -120,7 +133,6 @@ namespace EditTool
 
             var other = ConnectedSocket;
             
-            // Записываем разрыв соединения в историю Undo
 #if UNITY_EDITOR
             Undo.RecordObject(this, "Disconnect Socket");
             if (other != null) Undo.RecordObject(other, "Disconnect Target Socket");
@@ -139,7 +151,16 @@ namespace EditTool
         private void OnDrawGizmos()
         {
             Gizmos.color = IsConnected ? new Color(1f, 0f, 0f, 0.5f) : new Color(0f, 1f, 0f, 0.5f);
-            Gizmos.DrawSphere(transform.position, 0.1f);
+            
+            // Если это главный сокет, рисуем куб вместо сферы, чтобы отличать визуально
+            if (isMainSpawnPoint)
+            {
+                Gizmos.DrawCube(transform.position, Vector3.one * 0.1f);
+            }
+            else
+            {
+                Gizmos.DrawSphere(transform.position, 0.1f);
+            }
 
             Gizmos.color = Color.blue;
             Gizmos.DrawRay(transform.position, Direction * 0.3f);
@@ -148,7 +169,15 @@ namespace EditTool
         private void OnDrawGizmosSelected()
         {
             Gizmos.color = IsConnected ? Color.red : Color.green;
-            Gizmos.DrawWireSphere(transform.position, 0.12f);
+            if (isMainSpawnPoint) Gizmos.DrawWireCube(transform.position, Vector3.one * 0.12f);
+            else Gizmos.DrawWireSphere(transform.position, 0.12f);
+            
+            // Подсвечиваем связь с корневым объектом линией
+            if (rootTransform != null && rootTransform != transform)
+            {
+                Gizmos.color = Color.yellow;
+                Gizmos.DrawLine(transform.position, rootTransform.position);
+            }
         }
     }
 }
