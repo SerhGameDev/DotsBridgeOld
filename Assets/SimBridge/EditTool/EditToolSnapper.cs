@@ -13,7 +13,7 @@ namespace EditTool
         
         private static GameObject lastSelectedObject;
         private static EditToolSocket[] cachedMovingSockets;
-        private static EditToolSocket[] allSocketsInScene; // Кэш всех сокетов на сцене
+        private static EditToolSocket[] allSocketsInScene; 
 
         static EditToolSnapper()
         {
@@ -37,11 +37,10 @@ namespace EditTool
 
             int currentHotControl = GUIUtility.hotControl;
             bool isDragging = currentHotControl != 0;
-            bool justStartedDragging = (lastHotControl == 0 && currentHotControl != 0); // Только начали тащить
+            bool justStartedDragging = (lastHotControl == 0 && currentHotControl != 0); 
             bool justDropped = (lastHotControl != 0 && currentHotControl == 0); 
             lastHotControl = currentHotControl;
 
-            // Как только начали тащить объект - находим ВСЕ сокеты на сцене один раз
             if (justStartedDragging)
             {
                 allSocketsInScene = Object.FindObjectsOfType<EditToolSocket>();
@@ -56,13 +55,35 @@ namespace EditTool
 
             foreach (var moving in cachedMovingSockets)
             {
-                if (moving.IsConnected) continue;
+                // ==========================================
+                // АВТО-ОТКЛЮЧЕНИЕ ПРИ РАЗРЫВЕ ДИСТАНЦИИ
+                // ==========================================
+                if (moving.IsConnected)
+                {
+                    var partner = moving.ConnectedSocket;
+                    if (partner != null)
+                    {
+                        float dist = Vector3.Distance(moving.transform.position, partner.transform.position);
+                        float angle = Vector3.Angle(moving.Direction, -partner.Direction);
 
+                        // Если растащили на 5 см или повернули на 3 градуса — рвем связь
+                        if (dist > 0.05f || angle > 3f)
+                        {
+                            Undo.RecordObject(moving, "Auto Disconnect");
+                            Undo.RecordObject(partner, "Auto Disconnect Target");
+                            moving.Disconnect();
+                            Debug.Log($"[EditTool] Связь разорвана при перемещении: {moving.name}");
+                        }
+                    }
+                }
+
+                // Если после проверки выше он все еще занят (значит не двигали) - пропускаем
+                if (moving.IsConnected) continue;
+             
+                // Поиск новых соединений
                 foreach (var target in allSocketsInScene)
                 {
-                    // Защита от удаленных объектов (если удалили во время перетаскивания)
                     if (target == null) continue;
-
                     if (target.IsConnected || cachedMovingSockets.Contains(target) || !moving.CanConnectTo(target)) continue;
 
                     float dist = Vector3.Distance(moving.transform.position, target.transform.position);
@@ -82,7 +103,8 @@ namespace EditTool
 
                 if (justDropped)
                 {
-                    Transform rootToMove = bestMoving.rootTransform != null ? bestMoving.rootTransform : activeObj.transform;
+                    Transform rootToMove = bestMoving.rootTransform != null ? bestMoving.rootTransform : 
+                        (bestMoving.ParentNode != null ? bestMoving.ParentNode.transform : activeObj.transform);
 
                     Undo.RecordObject(rootToMove, "Auto Snap Position");
 

@@ -16,6 +16,7 @@ namespace EditTool
         CableBox
     }
 
+    [ExecuteAlways] // Важно добавить, чтобы OnDestroy работал в режиме Редактора
     public class EditToolSocket : MonoBehaviour
     {
         [TitleGroup("Настройки сокета")]
@@ -44,6 +45,17 @@ namespace EditTool
 
         [TitleGroup("Создание узла"), HideIf("IsConnected")]
         [Button("Присоединить объект", ButtonSizes.Medium), EnableIf("@prefabToSpawn != null")]
+        
+        private EditToolNode _parentNode;
+        public EditToolNode ParentNode 
+        {
+            get 
+            {
+                // Ленивая инициализация: автоматически ищем менеджера выше по иерархии
+                if (_parentNode == null) _parentNode = GetComponentInParent<EditToolNode>();
+                return _parentNode;
+            }
+        }
         public void SpawnAndConnect()
         {
 #if UNITY_EDITOR
@@ -92,6 +104,25 @@ namespace EditTool
             if (IsConnected || other.IsConnected) return false;
             if (this.socketType != other.socketType) return false;
 
+            // ЗАЩИТА ОТ КОНФЛИКТА ВНУТРИ ОДНОЙ ДЕТАЛИ
+            // Если оба сокета лежат внутри одного EditToolNode, они не могут соединиться
+            if (this.ParentNode != null && other.ParentNode != null && this.ParentNode == other.ParentNode)
+            {
+                return false;
+            }
+
+            // Запасная защита, если менеджер не добавлен, но назначен одинаковый rootTransform
+            if (this.rootTransform != null && other.rootTransform != null && this.rootTransform == other.rootTransform)
+            {
+                return false;
+            }
+            
+            // Если rootTransform не назначен, но сокеты имеют общего прямого родителя
+            if (this.transform.parent != null && this.transform.parent == other.transform.parent)
+            {
+                return false;
+            }
+
             return true;
         }
 
@@ -114,8 +145,11 @@ namespace EditTool
             var other = ConnectedSocket;
             
 #if UNITY_EDITOR
-            Undo.RecordObject(this, "Disconnect Socket");
-            if (other != null) Undo.RecordObject(other, "Disconnect Target Socket");
+            if (!Application.isPlaying) 
+            {
+                Undo.RecordObject(this, "Disconnect Socket");
+                if (other != null) Undo.RecordObject(other, "Disconnect Target Socket");
+            }
 #endif
 
             ConnectedSocket = null;
@@ -149,6 +183,23 @@ namespace EditTool
             {
                 Gizmos.color = Color.yellow;
                 Gizmos.DrawLine(transform.position, rootTransform.position);
+            }
+        }
+
+        // ==========================================
+        // ОЧИСТКА ПРИ УДАЛЕНИИ
+        // ==========================================
+        private void OnDestroy()
+        {
+            // Если объект удаляют из сцены, мы должны освободить соседний сокет
+            if (IsConnected)
+            {
+                var other = ConnectedSocket;
+                ConnectedSocket = null;
+                if (other != null)
+                {
+                    other.Disconnect();
+                }
             }
         }
     }
