@@ -1,5 +1,4 @@
-﻿using DotsBridge.Build;
-using DotsBridge.Modules.Movement;
+﻿using DotsBridge.Modules.Movement;
 using DotsBridge.Modules.Rotation;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -70,11 +69,7 @@ namespace DotsBridge.Authoring
                 AddComponent(entity, new BridgeOwner { ClientId = 0 });
                 AddComponent(entity, new DeathEvent());
                 SetComponentEnabled<DeathEvent>(entity, false);
-                AddComponent<WallTag>(entity);
-                AddComponent<WallComponent>(entity);
                 
-                // Добавляем буфер для связей
-                AddBuffer<ConnectionElement>(entity);
                 // --- 2. MOVEMENT ---
                 if (authoring.UseMovement)
                 {
