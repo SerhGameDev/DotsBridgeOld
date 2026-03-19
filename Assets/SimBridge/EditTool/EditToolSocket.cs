@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 using Sirenix.OdinInspector;
 using System.Linq;
@@ -45,17 +44,6 @@ namespace EditTool
 
         [TitleGroup("Создание узла"), HideIf("IsConnected")]
         [Button("Присоединить объект", ButtonSizes.Medium), EnableIf("@prefabToSpawn != null")]
-        public static readonly HashSet<EditToolSocket> AllSockets = new HashSet<EditToolSocket>();
-
-        private void OnEnable()
-        {
-            AllSockets.Add(this);
-        }
-
-        private void OnDisable()
-        {
-            AllSockets.Remove(this);
-        }
         public void SpawnAndConnect()
         {
 #if UNITY_EDITOR
@@ -66,7 +54,6 @@ namespace EditTool
 
             EditToolSocket[] spawnedSockets = spawnedObj.GetComponentsInChildren<EditToolSocket>();
             
-            // Сначала ищем сокет, помеченный как главный. Если такого нет - берем любой подходящий.
             EditToolSocket targetSocket = spawnedSockets.FirstOrDefault(s => s.isMainSpawnPoint && CanConnectTo(s));
             if (targetSocket == null)
             {
@@ -80,22 +67,15 @@ namespace EditTool
                 return;
             }
 
-            // Определяем, что именно мы будем двигать
             Transform rootToMove = targetSocket.rootTransform != null ? targetSocket.rootTransform : spawnedObj.transform;
 
-            // 1. ПОВОРОТ
-            // Вычисляем нужный поворот так, чтобы целевой сокет смотрел в противоположную сторону от текущего
             Quaternion desiredSocketRotation = Quaternion.LookRotation(-this.Direction, this.transform.up);
             Quaternion rotationDelta = desiredSocketRotation * Quaternion.Inverse(targetSocket.transform.rotation);
-            
-            // Применяем дельту поворота к корневому объекту
             rootToMove.rotation = rotationDelta * rootToMove.rotation;
 
-            // 2. ПОЗИЦИЯ (Важно: вычисляем ПОСЛЕ поворота, так как позиция targetSocket изменилась)
             Vector3 positionDelta = this.transform.position - targetSocket.transform.position;
             rootToMove.position += positionDelta;
 
-            // 3. СОЕДИНЕНИЕ И UNDO
             Undo.RecordObject(this, "Connect Socket");
             Undo.RecordObject(targetSocket, "Connect Target Socket");
             
@@ -152,15 +132,8 @@ namespace EditTool
         {
             Gizmos.color = IsConnected ? new Color(1f, 0f, 0f, 0.5f) : new Color(0f, 1f, 0f, 0.5f);
             
-            // Если это главный сокет, рисуем куб вместо сферы, чтобы отличать визуально
-            if (isMainSpawnPoint)
-            {
-                Gizmos.DrawCube(transform.position, Vector3.one * 0.1f);
-            }
-            else
-            {
-                Gizmos.DrawSphere(transform.position, 0.1f);
-            }
+            if (isMainSpawnPoint) Gizmos.DrawCube(transform.position, Vector3.one * 0.1f);
+            else Gizmos.DrawSphere(transform.position, 0.1f);
 
             Gizmos.color = Color.blue;
             Gizmos.DrawRay(transform.position, Direction * 0.3f);
@@ -172,7 +145,6 @@ namespace EditTool
             if (isMainSpawnPoint) Gizmos.DrawWireCube(transform.position, Vector3.one * 0.12f);
             else Gizmos.DrawWireSphere(transform.position, 0.12f);
             
-            // Подсвечиваем связь с корневым объектом линией
             if (rootTransform != null && rootTransform != transform)
             {
                 Gizmos.color = Color.yellow;
