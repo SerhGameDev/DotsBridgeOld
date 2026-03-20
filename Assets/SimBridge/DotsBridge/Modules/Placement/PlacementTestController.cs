@@ -1,3 +1,4 @@
+using DotsBridge.Interaction;
 using UnityEngine;
 using DotsBridge.Placement;
 
@@ -32,7 +33,10 @@ namespace DotsBridge.Test
                 EntityBridge.InCurrentWorld().BeginSpawn(_prefabNameToSpawn).Spawn().BeginPlacement(_step);
                 Debug.Log("[SimBridge Editor] Выбран компонент. ЛКМ - разместить, G - вкл/выкл сетку.");
             }
-
+            if (Input.GetMouseButtonDown(1)) // 1 - правая кнопка мыши
+            {
+                EntityBridge.InCurrentWorld().FindWithComponent<HingeState>().ToggleHinge();
+            }
             // --- 2. УПРАВЛЕНИЕ СЕТКОЙ ---
             if (Input.GetKeyDown(KeyCode.G))
             {

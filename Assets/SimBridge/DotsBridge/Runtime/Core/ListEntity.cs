@@ -58,7 +58,6 @@ namespace DotsBridge
 
             return this;
         }
-
         /// <summary>
         /// Фильтрует батч, оставляя только те сущности, где данные компонента T 
         /// соответствуют заданному условию.
@@ -365,6 +364,10 @@ namespace DotsBridge
             return list;
         }
 
+        public static SingleEntity First(this ListEntity entity)
+        {
+            return entity.Entities[0].ToSingleEntity(entity.Word);
+        }
         public static DotsCommand Command(string id = "")
         {
             return new DotsCommand(id);

@@ -4,14 +4,19 @@ using Unity.Collections;
 
 namespace DotsBridge.Test
 {
+    [RequireComponent(typeof(LocalCharacterInputSync))]
     public class CharacterTestController : MonoBehaviour
     {
         [SerializeField] private string _characterPrefabName = "PlayerCharacter";
         [SerializeField] private string _existingCharacterId = "MainHero_1";
 
         private SingleEntity _currentCharacter;
-
-        void Update()
+        private LocalCharacterInputSync _inputSync;
+        private void Awake()
+        {
+            _inputSync = GetComponent<LocalCharacterInputSync>();
+        }
+        private void Update()
         {
             // --- 1. СПАВН И ПЕРЕХВАТ УПРАВЛЕНИЯ ---
             if (Input.GetKeyDown(KeyCode.Alpha2))
@@ -31,6 +36,7 @@ namespace DotsBridge.Test
                     _currentCharacter = new SingleEntity(spawnedBatch.Entities[0], EntityBridge.InCurrentWorld());
                     _currentCharacter.Possess().AttachFirstPersonCamera(); 
                 }
+                _inputSync.ControlledEntity = _currentCharacter;
             }
 
             // --- 2. ПОИСК СУЩЕСТВУЮЩЕГО ПЕРСОНАЖА ПО ID И ПЕРЕХВАТ ---
