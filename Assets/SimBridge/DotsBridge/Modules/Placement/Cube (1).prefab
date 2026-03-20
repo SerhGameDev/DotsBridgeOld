@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 7371889437670318399}
   - component: {fileID: 8036962284059774669}
   - component: {fileID: -24366749074435439}
+  - component: {fileID: 2104891218149689915}
   m_Layer: 0
   m_Name: Cube (1)
   m_TagString: Untagged
@@ -325,7 +326,7 @@ MonoBehaviour:
       Data: 1|System.RuntimeType, mscorlib
     - Name: 
       Entry: 1
-      Data: DotsBridge.IsObdgectTag, DotsBridge
+      Data: DotsBridge.BossTag, DotsBridge
     - Name: 
       Entry: 8
       Data: 
@@ -335,3 +336,16 @@ MonoBehaviour:
     - Name: 
       Entry: 8
       Data: 
+--- !u!114 &2104891218149689915
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 928626453277590923}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a6d3578f9fa046a5979a87e70157cd0f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DotsBridge::DotsBridge.Placement.PlacementLayerAuthoring
+  LayerName: Box
