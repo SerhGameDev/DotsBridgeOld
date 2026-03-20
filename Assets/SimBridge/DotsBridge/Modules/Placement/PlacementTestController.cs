@@ -23,7 +23,7 @@ namespace DotsBridge.Test
             EntityBridge.OnPlacementFailed -= HandlePlacementFailed;
             EntityBridge.OnDuctDrawingStarted -= HandleDuctDrawing;
         }
-
+        
         void Update()
         {
             // --- 1. СПАВН НОВОГО ОБЪЕКТА ---

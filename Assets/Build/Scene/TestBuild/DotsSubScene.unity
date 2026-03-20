@@ -1616,8 +1616,10 @@ MonoBehaviour:
   Prefabs:
   - Name: RelayCube
     Prefab: {fileID: 4631058359380214761, guid: bfcc9432dbd720f4d8b5d3f417773aa0, type: 3}
-  - Name: WallPrefab
-    Prefab: {fileID: 8983653961358283199, guid: 61248e1da4e7bad4cb57ccea1416491e, type: 3}
+  - Name: PlayerCharacter
+    Prefab: {fileID: 1741793129460954052, guid: f784f222b8548e3459a334399755dda2, type: 3}
+  - Name: MainHero_1
+    Prefab: {fileID: 311404811379675160, guid: 8dd4df157c150f04fb6db4e6139b1a87, type: 3}
 --- !u!1 &1984172563
 GameObject:
   m_ObjectHideFlags: 0
