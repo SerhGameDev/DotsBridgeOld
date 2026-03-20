@@ -1,5 +1,4 @@
-﻿using DotsBridge.Placement;
-using Unity.Entities;
+﻿using Unity.Entities;
 using UnityEngine;
 
 namespace DotsBridge
@@ -8,16 +7,16 @@ namespace DotsBridge
     {
         public GameObject GhostPrefab;
 
-    }
-    public class PlacementSettingsBaker : Baker<PlacementSettingsAuthoring>
-    {
-        public override void Bake(PlacementSettingsAuthoring authoring)
+        public class PlacementSettingsBaker : Baker<PlacementSettingsAuthoring>
         {
-            var entity = GetEntity(TransformUsageFlags.None);
-            AddComponent(entity, new PlacementSettings
+            public override void Bake(PlacementSettingsAuthoring authoring)
             {
-                GhostPrefab = GetEntity(authoring.GhostPrefab, TransformUsageFlags.Dynamic)
-            });
+                var entity = GetEntity(TransformUsageFlags.None);
+                AddComponent(entity, new PlacementSettings
+                {
+                    GhostPrefab = GetEntity(authoring.GhostPrefab, TransformUsageFlags.Dynamic)
+                });
+            }
         }
     }
 }

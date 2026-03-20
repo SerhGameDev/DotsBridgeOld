@@ -34,6 +34,50 @@ namespace DotsBridge
         {
             PrintLog(logType, "Количество сущностей: " + batch.Count() + ", " + customMessage);
             return batch; // Возвращаем batch для поддержки цепочек вызовов (Fluent API)
+        }   
+        /// <summary>
+        /// Выводит в консоль сообщение, если количество сущностей в батче больше указанного порога.
+        /// Скорость: Мгновенно (O(1)).
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ListEntity LogName(this ListEntity batch, BridgeLogType logType = BridgeLogType.Normal, string customMessage = "")
+        {
+            for (int i = 0; i < batch.Count; i++)
+            {
+                PrintLog(logType, "Имя у сущьности: " + batch.Entities[i].ToSingleEntity(batch.Word).GetComponent<BridgeIdentity>().Hash + ", " + customMessage);
+            }
+            return batch; // Возвращаем batch для поддержки цепочек вызовов (Fluent API)
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ListEntity LogIfContainsName(this ListEntity batch, string targetName, BridgeLogType logType = BridgeLogType.Normal)
+        {
+            int targetHash = GetHash(targetName);
+            bool found = false;
+
+            for (int i = 0; i < batch.Count; i++)
+            {
+                var single = batch.Entities[i].ToSingleEntity(batch.Word);
+        
+                // Проверяем, есть ли вообще компонент идентификации
+                if (single.HasComponent<BridgeIdentity>())
+                {
+                    int entityHash = single.GetComponent<BridgeIdentity>().Hash;
+
+                    if (entityHash == targetHash)
+                    {
+                        PrintLog(logType, $"[УСПЕХ] Сущность найдена! Имя: '{targetName}', Hash: {entityHash}, Index: {i}");
+                        found = true;
+                    }
+                }
+            }
+
+            if (!found)
+            {
+                PrintLog(BridgeLogType.Warning, $"[ВНИМАНИЕ] Имя '{targetName}' не найдено в данном списке сущностей.");
+            }
+
+            return batch;
         }
 
         /// <summary>

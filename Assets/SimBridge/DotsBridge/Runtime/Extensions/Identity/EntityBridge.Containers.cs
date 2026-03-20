@@ -112,7 +112,15 @@ namespace DotsBridge
             var systemHandle = bridge.World.GetExistingSystem<IdMapSystem>();
             if (systemHandle == SystemHandle.Null) return;
 
-            var map = bridge.World.Unmanaged.GetUnsafeSystemRef<IdMapSystem>(systemHandle).EntityMap;
+            // Получаем ссылку на структуру нашей системы
+            ref var idSystem = ref bridge.World.Unmanaged.GetUnsafeSystemRef<IdMapSystem>(systemHandle);
+
+            // СИНХРОНИЗАЦИЯ ПО ТРЕБОВАНИЮ:
+            // Ждем завершения конкретно этого джоба записи в карту
+            idSystem.WriteHandle.Complete();
+
+            // Теперь безопасно читаем карту
+            var map = idSystem.EntityMap;
 
             if (map.IsCreated && map.TryGetFirstValue(idHash, out Entity entity, out var iterator))
             {
@@ -126,7 +134,6 @@ namespace DotsBridge
                 while (map.TryGetNextValue(out entity, ref iterator));
             }
         }
-
         /// <summary>
         /// Находит сущности по ID и добавляет их в ТЕКУЩИЙ батч.
         /// Удобно для сбора нескольких ID в одну группу.
@@ -154,8 +161,8 @@ namespace DotsBridge
             public int TargetHash;
             public bool Execute(SingleEntity entity)
             {
-                return entity.HasComponent<EntityIdComponent>() &&
-                       entity.GetComponent<EntityIdComponent>().Hash == TargetHash;
+                return entity.HasComponent<BridgeIdentity>() &&
+                       entity.GetComponent<BridgeIdentity>().Hash == TargetHash;
             }
         }
 

@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using Sirenix.OdinInspector;
 using Unity.Entities;
 using UnityEngine;
 
@@ -10,12 +12,11 @@ namespace DotsBridge
         [Serializable]
         public struct PrefabEntry
         {
-            public string Name;  
-            public GameObject Prefab; 
+            public string Name;
+            public GameObject Prefab;
         }
 
-        [Header("Registry")]
-        public List<PrefabEntry> Prefabs = new List<PrefabEntry>();
+        [Header("Registry")] public List<PrefabEntry> Prefabs = new List<PrefabEntry>();
 
         public class Baker : Baker<PrefabContainerAuthoring>
         {
@@ -37,7 +38,9 @@ namespace DotsBridge
                         PrefabEntity = GetEntity(entry.Prefab, TransformUsageFlags.Dynamic)
                     });
                 }
+
             }
         }
     }
+
 }

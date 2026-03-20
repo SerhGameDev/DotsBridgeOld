@@ -21,6 +21,7 @@ namespace DotsBridge
             Entity = entity;
             Bridge = bridge;
         }
+     
         /// <summary>
         /// Конвертирует одиночную сущность в ListEntity (группу из одного элемента).
         /// ВНИМАНИЕ: Создает новый NativeList, поэтому результат требует вызова Dispose()!
@@ -179,6 +180,17 @@ namespace DotsBridge
             }
 
             Manager.DestroyEntity(Entity);
+        }
+    }
+    // Класс ОБЯЗАТЕЛЬНО должен быть static, non-generic и не вложенным
+    public static class EntityExtensions
+    {
+        /// <summary>
+        /// Позволяет писать entity.ToSingleEntity(bridge)
+        /// </summary>
+        public static SingleEntity ToSingleEntity(this Entity entity, BridgeWorld bridge)
+        {
+            return new SingleEntity(entity, bridge);
         }
     }
 }

@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &928626453277590923
+--- !u!1 &4631058359380214761
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,49 +8,52 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 8792679387683115317}
-  - component: {fileID: 6021322250143041355}
-  - component: {fileID: 8198007009539818756}
-  - component: {fileID: 7371889437670318399}
-  - component: {fileID: 8036962284059774669}
-  - component: {fileID: -24366749074435439}
+  - component: {fileID: 120337678205071424}
+  - component: {fileID: 8410592811643949484}
+  - component: {fileID: 412093137829964865}
+  - component: {fileID: 3555677300624071324}
+  - component: {fileID: 4758029734531633136}
+  - component: {fileID: 7982407102582397257}
+  - component: {fileID: 7230135447483966484}
+  - component: {fileID: 2777056620532200193}
+  - component: {fileID: -2762142540290510515}
   m_Layer: 0
-  m_Name: Cube (1)
+  m_Name: Cube (1) 1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &8792679387683115317
+--- !u!4 &120337678205071424
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 928626453277590923}
+  m_GameObject: {fileID: 4631058359380214761}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 2.36, y: 5.27, z: -1.41}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 6.05, y: 1.95, z: 11.0806}
+  m_LocalScale: {x: 1, y: 1, z: 0.3987}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &6021322250143041355
+--- !u!33 &8410592811643949484
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 928626453277590923}
+  m_GameObject: {fileID: 4631058359380214761}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!23 &8198007009539818756
+--- !u!23 &412093137829964865
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 928626453277590923}
+  m_GameObject: {fileID: 4631058359380214761}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
@@ -93,13 +96,13 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &7371889437670318399
+--- !u!114 &3555677300624071324
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 928626453277590923}
+  m_GameObject: {fileID: 4631058359380214761}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b275e5f92732148048d7b77e264ac30e, type: 3}
@@ -242,19 +245,19 @@ MonoBehaviour:
         Tag07: 0
     m_SerializedVersion: 1
   m_SerializedVersion: 3
---- !u!114 &8036962284059774669
+--- !u!114 &4758029734531633136
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 928626453277590923}
+  m_GameObject: {fileID: 4631058359380214761}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ccea9ea98e38942e0b0938c27ed1903e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Physics.Custom::Unity.Physics.Authoring.PhysicsBodyAuthoring
-  m_MotionType: 0
+  m_MotionType: 2
   m_Smoothing: 0
   m_Mass: 1
   m_LinearDamping: 0.01
@@ -267,7 +270,7 @@ MonoBehaviour:
     x: 0
     y: 0
     z: 0
-  m_GravityFactor: 1
+  m_GravityFactor: 0
   m_OverrideDefaultMassDistribution: 0
   m_CenterOfMass:
     x: 0
@@ -293,13 +296,13 @@ MonoBehaviour:
     Tag05: 0
     Tag06: 0
     Tag07: 0
---- !u!114 &-24366749074435439
+--- !u!114 &7982407102582397257
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 928626453277590923}
+  m_GameObject: {fileID: 4631058359380214761}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c12c8612d88a40b1b8aa98328d51ca37, type: 3}
@@ -325,7 +328,7 @@ MonoBehaviour:
       Data: 1|System.RuntimeType, mscorlib
     - Name: 
       Entry: 1
-      Data: DotsBridge.IsObdgectTag, DotsBridge
+      Data: DotsBridge.IsObjectTag, DotsBridge
     - Name: 
       Entry: 8
       Data: 
@@ -335,3 +338,42 @@ MonoBehaviour:
     - Name: 
       Entry: 8
       Data: 
+--- !u!114 &7230135447483966484
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4631058359380214761}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a9fbc7b027d943268a74e9d68da9b585, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DotsBridge::DotsBridge.Placement.PlacementPivotAuthoring
+  Offset: {x: -0.5, y: 0, z: 0}
+--- !u!114 &2777056620532200193
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4631058359380214761}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e77881feafa149d6b20371c7583104f6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DotsBridge::DotsBridge.Placement.PlacementBoundsAuthoring
+  Size: {x: 1, y: 1, z: 0.45}
+--- !u!114 &-2762142540290510515
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4631058359380214761}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a6d3578f9fa046a5979a87e70157cd0f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DotsBridge::DotsBridge.Placement.PlacementLayerAuthoring
+  LayerName: Default

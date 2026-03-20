@@ -248,6 +248,19 @@ namespace DotsBridge
             Manager.AddComponent<T>(Entities.AsArray());
             return this;
         }
+        /// <summary>
+        /// Добавляет компонент-тег всем сущностям в батче.
+        /// </summary>
+        public ListEntity AddComponent<T>(bool IsEnebled) where T : unmanaged, IComponentData, IEnableableComponent
+        {
+            if (Entities.Length == 0) return this;
+            Manager.AddComponent<T>(Entities.AsArray());
+            for (int i = 0; i < Entities.Length; i++)
+            {
+                Manager.SetComponentEnabled<T>(Entities[i] ,IsEnebled);
+            }
+            return this;
+        }
 
         /// <summary>
         /// Безопасный вариант: обновляет данные только у тех сущностей, у которых ЕСТЬ этот компонент.
@@ -265,7 +278,7 @@ namespace DotsBridge
             }
 
             return this;
-        }
+        }   
 
         /// <summary>
         /// Удаляет компонент у всех сущностей в батче.
@@ -352,7 +365,7 @@ namespace DotsBridge
             return list;
         }
 
-        public static DotsCommand Command(string id)
+        public static DotsCommand Command(string id = "")
         {
             return new DotsCommand(id);
         }

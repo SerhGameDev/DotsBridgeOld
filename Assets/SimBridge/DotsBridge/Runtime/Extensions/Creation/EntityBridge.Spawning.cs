@@ -9,7 +9,7 @@ namespace DotsBridge
         /// <summary>
         /// Внутренний метод инициализации спавна через конкретный реестр.
         /// </summary>
-        private static SpawnerBuilder BeginSpawn(this BridgeWorld word, string prefabName)
+        public static SpawnerBuilder BeginSpawn(this BridgeWorld word, string prefabName)
         {
             if (word == null)
             {

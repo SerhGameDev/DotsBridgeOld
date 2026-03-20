@@ -25,7 +25,7 @@ namespace DotsBridge
 
         public readonly List<ICommandAction> ListActions = new List<ICommandAction>();
 
-        public DotsCommand(string name) => Name = name;
+        public DotsCommand(string name = "") => Name = name;
 
         /// <summary>
         /// Вариант 1: Максимальная производительность.

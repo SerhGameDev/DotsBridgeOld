@@ -2,10 +2,7 @@ using Unity.Entities;
 
 namespace DotsBridge
 {
-    public struct EntityIdComponent : IComponentData
-    {
-        public int Hash;
-    }
+    
     // Вешается при спавне (например, через spawner.Spawn("Player_1"))
     public struct BridgeIdentity : IComponentData
     {

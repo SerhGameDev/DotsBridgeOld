@@ -50,8 +50,8 @@ namespace DotsBridge.Placement
     {
         public float3 StartPoint;
         public float3 EndPoint;
-        // Можно хранить профиль сечения, если короб меняет не только длину
         public float Width;
         public float Height;
+        public bool IsDrawing; 
     }
 }

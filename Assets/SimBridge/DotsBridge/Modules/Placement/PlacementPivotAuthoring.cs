@@ -1,4 +1,6 @@
-﻿using Unity.Entities;
+﻿using System;
+using Unity.Entities;
+using UnityEditor;
 using UnityEngine;
 
 namespace DotsBridge.Placement
@@ -18,6 +20,22 @@ namespace DotsBridge.Placement
                     Value = authoring.Offset
                 });
             }
+        }
+
+        private void OnDrawGizmos()
+        {
+            Gizmos.color = Color.cyan;
+
+            // Преобразуем локальный Offset в мировые координаты
+            // transform.TransformPoint учитывает позицию, поворот и масштаб объекта
+            Vector3 worldPivot = transform.TransformPoint(Offset);
+
+            // Рисуем маленькую сферу в этой точке
+            Gizmos.DrawSphere(worldPivot, 0.05f);
+
+            // (Опционально) Рисуем линию от центра объекта до точки смещения
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawLine(transform.position, worldPivot);
         }
     }
 }

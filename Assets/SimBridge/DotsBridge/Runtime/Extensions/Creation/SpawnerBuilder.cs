@@ -39,10 +39,8 @@ namespace DotsBridge
 
         public SpawnerBuilder SetOwner(int clientId) { _ownerId = clientId; return this; }
      
-        public DotsCommand Spawn(string commandName = "SpawnCommand")
+        public ListEntity Spawn()
         {
-            var command = new DotsCommand(commandName);
-
             var world = _world;
             var prefab = _prefab;
             var count = _count;
@@ -51,27 +49,27 @@ namespace DotsBridge
             var scale = _scale;
             var id = _idString;
             var owner = _ownerId;
-
-            command.SetTargetResolver(() =>
+            
+            var localTramsforrm = new LocalTransform()
             {
-                var localTramsforrm = new LocalTransform()
-                {
-                    Position = position,
-                    Rotation = rotation,
-                    Scale = scale,
-                };
+                Position = position,
+                Rotation = rotation,
+                Scale = scale,
+            };
+            int idHash = 0;
+            
+            idHash = string.IsNullOrEmpty(id) ? 0 : EntityBridge.GetHash(id);
 
-                int idHash = string.IsNullOrEmpty(id) ? 0 : EntityBridge.GetHash(id);
-
-                var spawnedEntities = new ListEntity(world);
-                spawnedEntities.Instantiate(prefab, count);
-                spawnedEntities.AddComponent(localTramsforrm);
+            var spawnedEntities = new ListEntity(world);
+            spawnedEntities.Instantiate(prefab, count);
+            spawnedEntities.AddComponent(localTramsforrm);
+            if(idHash != 0)
                 spawnedEntities.AddComponent(new BridgeIdentity { Hash = idHash });
+            if(owner != 0)
                 spawnedEntities.AddComponent(new BridgeOwner { ClientId = idHash });
-                return new ListEntity(world);
-            }, true);
-
-            return command;
+            spawnedEntities.AddComponent<DeathEvent>(false);
+            spawnedEntities.AddEntitiesFromContainer(id);
+            return spawnedEntities;
         }
 
         public void SpawnAsync()
