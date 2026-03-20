@@ -1,5 +1,6 @@
 using Unity.Entities;
 using Unity.Mathematics;
+using UnityEngine;
 
 namespace DotsBridge.Character
 {
@@ -28,7 +29,13 @@ namespace DotsBridge.Character
         public float2 MoveInput;
         public float2 LookInput;
     }
-
+    /// <summary>
+    /// Managed компонент. Хранит ссылку на созданную GameObject-камеру.
+    /// </summary>
+    public class CharacterCameraLink : IComponentData
+    {
+        public Camera Camera;
+    }
     /// <summary>
     /// Настройки физики и перемещения персонажа.
     /// </summary>
@@ -39,8 +46,16 @@ namespace DotsBridge.Character
         public float StepHeight;
         public float CharacterRadius;
         public float Gravity;
+        public float EyeHeight; 
     }
-
+    /// <summary>
+    /// Хранит текущий угол наклона головы (Pitch), чтобы камера могла смотреть вверх/вниз.
+    /// Вращение влево/вправо (Yaw) будет применяться к самому LocalTransform сущности.
+    /// </summary>
+    public struct CharacterViewState : IComponentData
+    {
+        public float Pitch; 
+    }
     /// <summary>
     /// Текущий вектор скорости и состояние нахождения на земле.
     /// </summary>

@@ -23,11 +23,12 @@ namespace DotsBridge.Test
                     .BeginSpawn(_characterPrefabName)
                     .SetId(_existingCharacterId)
                     .Spawn();
+              
 
                 if (spawnedBatch.Count > 0)
                 {
                     _currentCharacter = new SingleEntity(spawnedBatch.Entities[0], EntityBridge.InCurrentWorld());
-                    _currentCharacter.Possess();
+                    _currentCharacter.Possess().AttachFirstPersonCamera(); 
                 }
             }
 

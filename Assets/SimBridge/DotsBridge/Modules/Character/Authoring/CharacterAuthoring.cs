@@ -14,6 +14,7 @@ namespace DotsBridge.Character
         public float StepHeight = 0.3f;
         public float CharacterRadius = 0.4f;
         public float Gravity = -15f;
+        public float EyeHeight = 1.6f; // Высота глаз взрослого человека
 
         [Header("State")]
         public bool StartAsActivePlayer = false;
@@ -27,6 +28,7 @@ namespace DotsBridge.Character
                 AddComponent<CharacterTag>(entity);
                 AddComponent<CharacterControlInput>(entity);
                 AddComponent<CharacterVelocity>(entity);
+                AddComponent<CharacterViewState>(entity);
                 
                 AddComponent(entity, new CharacterSettings
                 {
@@ -34,11 +36,10 @@ namespace DotsBridge.Character
                     LookSpeed = authoring.LookSpeed,
                     StepHeight = authoring.StepHeight,
                     CharacterRadius = authoring.CharacterRadius,
-                    Gravity = authoring.Gravity
+                    Gravity = authoring.Gravity,
+                    EyeHeight = authoring.EyeHeight 
                 });
 
-                // Добавляем тег активности, но по умолчанию выключаем его, 
-                // если не сказано иное (для системы Possess)
                 AddComponent<ActiveCharacterTag>(entity);
                 SetComponentEnabled<ActiveCharacterTag>(entity, authoring.StartAsActivePlayer);
             }
