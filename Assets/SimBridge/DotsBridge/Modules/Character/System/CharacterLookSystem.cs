@@ -9,8 +9,6 @@ namespace DotsBridge.Character
     {
         protected override void OnUpdate()
         {
-            float deltaTime = SystemAPI.Time.DeltaTime;
-
             foreach (var (transform, input, settings, viewState) in SystemAPI.Query<
                              RefRW<LocalTransform>, 
                              RefRO<CharacterControlInput>, 
@@ -18,21 +16,25 @@ namespace DotsBridge.Character
                              RefRW<CharacterViewState>>()
                          .WithAll<ActiveCharacterTag>())
             {
-                // Если мышь не двигалась, пропускаем вычисления
-                if (input.ValueRO.LookInput.x == 0 && input.ValueRO.LookInput.y == 0) continue;
-                
                 // 1. Вращение тела влево/вправо (Yaw)
-                // Умножаем на deltaTime для независимости от FPS
-                float yawDelta = input.ValueRO.LookInput.x * settings.ValueRO.LookSpeed * deltaTime;
-                transform.ValueRW = transform.ValueRW.RotateY(yawDelta);
+                float yawDelta = input.ValueRO.LookInput.x * settings.ValueRO.LookSpeed;
+                
+                // Создаем поворот ТОЛЬКО по Y
+                quaternion currentRotation = transform.ValueRO.Rotation;
+                quaternion extraRotation = quaternion.Euler(0, math.radians(yawDelta), 0);
+                
+                // Комбинируем и ВАЖНО: избавляемся от наклонов по X и Z
+                // Мы берем новый поворот по Y, но жестко задаем Up-вектор
+                quaternion combined = math.mul(currentRotation, extraRotation);
+                float3 forward = math.mul(combined, math.forward());
+                forward.y = 0; // Направляем взгляд строго в горизонт для расчета тела
+                
+                // Пересобираем вращение, чтобы оно было строго вертикальным
+                transform.ValueRW.Rotation = quaternion.LookRotationSafe(forward, math.up());
 
-                // 2. Вращение головы вверх/вниз (Pitch)
-                // Инвертируем Y, чтобы мышь вверх поднимала взгляд
-                float pitchDelta = -input.ValueRO.LookInput.y * settings.ValueRO.LookSpeed * deltaTime;
-                float newPitch = viewState.ValueRO.Pitch + pitchDelta;
-
-                // Ограничиваем угол, чтобы игрок не свернул себе шею (например, от -85 до 85 градусов)
-                viewState.ValueRW.Pitch = math.clamp(newPitch, -85f, 85f);
+                // 2. Вращение головы (Pitch) - остается как было
+                float pitchDelta = -input.ValueRO.LookInput.y * settings.ValueRO.LookSpeed;
+                viewState.ValueRW.Pitch = math.clamp(viewState.ValueRO.Pitch + pitchDelta, -85f, 85f);
             }
         }
     }

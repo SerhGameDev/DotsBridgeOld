@@ -21,6 +21,7 @@ namespace DotsBridge.Test
 
                 using var spawnedBatch = EntityBridge.InCurrentWorld()
                     .BeginSpawn(_characterPrefabName)
+                    .SetPosition(new Vector3(0,10,0) )
                     .SetId(_existingCharacterId)
                     .Spawn();
               
