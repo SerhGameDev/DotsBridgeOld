@@ -16,6 +16,11 @@ namespace SimVent.Systems
 
         public void OnUpdate(ref SystemState state)
         {
+            if (!SystemAPI.TryGetSingleton<SimVentConfigComponent>(out var config))
+            {
+                UnityEngine.Debug.LogWarning("Система физики остановлена: На сцене нет объекта с SimVentConfigAuthoring!");
+                return;
+            }
             float dt = SystemAPI.GetSingleton<SimulationTimeComponent>().FixedStep;
 
             // 1. Считаем нагрев ТЭНа и температуру воздуха ВНУТРИ труб
@@ -130,4 +135,6 @@ namespace SimVent.Systems
             sensor.MeasuredTemperature += (targetTemp - sensor.MeasuredTemperature) * (DeltaTime / sensor.SensorTimeConstant);
         }
     }
+    
+    
 }

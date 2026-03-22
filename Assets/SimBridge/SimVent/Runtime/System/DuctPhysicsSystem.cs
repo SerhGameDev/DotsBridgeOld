@@ -85,14 +85,20 @@ namespace SimVent.Systems
             state.FanPressureBoost = 0f;
             state.TotalHeatKW = 0f;
 
-            // ИЗМЕНЕНО: Теперь сопротивление трубы зависит от объема её источника (как в СНиП)
-            float nodeLength = 0f;
-            if (NodeLookup.HasComponent(duct.SourceNode) && !NodeLookup[duct.SourceNode].IsInfinite)
+            float nodeResistanceContribution = 0f;
+        
+            // Считаем сопротивление, только если источник - НЕ бесконечная улица
+            if (NodeLookup.HasComponent(duct.SourceNode))
             {
-                nodeLength = NodeLookup[duct.SourceNode].Volume;
+                var node = NodeLookup[duct.SourceNode];
+                // Если это обычная промежуточная труба (не улица), берем её длину
+                if (!node.IsInfinite) 
+                {
+                    nodeResistanceContribution = node.Volume * Config.DuctFrictionPerMeter;
+                }
             }
 
-            state.TotalResistance = Config.BaseDuctResistance + (nodeLength * Config.DuctFrictionPerMeter);
+            state.TotalResistance = Config.BaseDuctResistance + nodeResistanceContribution;
         }
     }
 

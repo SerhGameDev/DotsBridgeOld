@@ -57,15 +57,7 @@ namespace DotsBridge.Test
                 }
             }
 
-            // --- 3. СНЯТИЕ УПРАВЛЕНИЯ (СВОБОДНАЯ КАМЕРА/КУРСОР) ---
-            if (Input.GetKeyDown(KeyCode.Escape))
-            {
-                ReleaseCurrentCharacter();
-                
-                // Возвращаем курсор
-                Cursor.lockState = CursorLockMode.None;
-                Cursor.visible = true;
-            }
+        
         }
 
         private void ReleaseCurrentCharacter()

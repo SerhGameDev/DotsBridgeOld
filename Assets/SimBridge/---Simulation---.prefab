@@ -1,0 +1,82 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &4435949860729910392
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 227336765898100754}
+  - component: {fileID: 5131368541942970410}
+  - component: {fileID: 5533407705764674550}
+  - component: {fileID: 5657671557285640476}
+  m_Layer: 0
+  m_Name: ---Simulation---
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &227336765898100754
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4435949860729910392}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5131368541942970410
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4435949860729910392}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c892f2bc03dd37e4d839025ffb352633, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SimBridge::SimBridge.Core.Time.SimulationTimeAuthoring
+  TimeScale: 1
+  FixedStep: 0.02
+--- !u!114 &5533407705764674550
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4435949860729910392}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f274b46c78018054eaa13845fa451f84, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SimElectric::SimElectric.SimulationControlAuthoring
+  isRunning: 1
+  enableWireHighlight: 1
+--- !u!114 &5657671557285640476
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4435949860729910392}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e4333de1d8759c8418d97ffa609c631b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SimVent::SimVent.Authoring.SimVentConfigAuthoring
+  BaseDuctResistance: 0.5
+  DuctFrictionPerMeter: 1.5
+  AirHeatCapacityConstant: 2985
+  DeadHeadOverheatRate: 50
+  DeadHeadCooldownRate: 0.05
+  PressureMultiplier: 10000

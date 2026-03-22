@@ -57,8 +57,6 @@ namespace DotsBridge.Authoring
                         // Пропускаем самого себя, чтобы не зациклиться
                         if (child == authoring.transform) continue;
 
-                        // Регистрация ребенка с флагом Dynamic автоматически создает 
-                        // компоненты Parent и LocalTransform в ECS мире.
                         GetEntity(child, TransformUsageFlags.Dynamic);
                     }
                 }

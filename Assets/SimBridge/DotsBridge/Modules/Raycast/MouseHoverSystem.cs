@@ -2,6 +2,7 @@ using DotsBridge.Modules.Rotation;
 using Unity.Entities;
 using Unity.Physics;
 using UnityEngine;
+using RaycastHit = Unity.Physics.RaycastHit;
 
 namespace DotsBridge.Systems
 {
@@ -14,46 +15,49 @@ namespace DotsBridge.Systems
         public float CheckInterval = 0.05f;
         private float _timer = 0f;
 
+        // Позволяет настроить маску слоев. По умолчанию сталкивается со всем.
+        // Чтобы игнорировать пол/стены, здесь нужно будет задать конкретные BelongsTo/CollidesWith маски.
+        public CollisionFilter HoverFilter = CollisionFilter.Default;
+
         protected override void OnCreate()
         {
-            // Система ждет, пока появится физика
             RequireForUpdate<PhysicsWorldSingleton>();
         }
 
         protected override void OnUpdate()
         {
-            // Ограничитель частоты (Timer)
             _timer += SystemAPI.Time.DeltaTime;
             if (_timer < CheckInterval) return;
             _timer = 0f;
 
-            // Защита от запуска на сервере без камеры
             if (Camera.main == null) return;
-
-            // 1. Создаем луч
-            var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            var physicsWorld = SystemAPI.GetSingleton<PhysicsWorldSingleton>();
-
-            var input = new RaycastInput
-            {
-                Start = ray.origin,
-                End = ray.origin + ray.direction * 1000f,
-                Filter = CollisionFilter.Default
-            };
 
             Entity currentHitEntity = Entity.Null;
 
-            // 2. Пускаем луч через Unity Physics
-            if (physicsWorld.CastRay(input, out var hit))
+            // Выполняем рейкаст ТОЛЬКО если зажат ALT
+            if (Input.GetKey(KeyCode.LeftAlt))
             {
-                // Если попали в объект с InteractableTag, запоминаем его
-                if (SystemAPI.HasComponent<InteractableTag>(hit.Entity))
+                var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                var physicsWorld = SystemAPI.GetSingleton<PhysicsWorldSingleton>();
+
+                var input = new RaycastInput
                 {
-                    currentHitEntity = hit.Entity;
+                    Start = ray.origin,
+                    End = ray.origin + ray.direction * 1000f,
+                    Filter = HoverFilter
+                };
+
+                if (physicsWorld.CastRay(input, out var hit))
+                {
+                    // Ищем именно объекты с UI-окнами
+                    if (SystemAPI.HasComponent<HasPopupTag>(hit.Entity))
+                    {
+                        currentHitEntity = hit.Entity;
+                    }
                 }
             }
 
-            // 3. Логика Enter / Exit
+            // Логика Enter / Exit срабатывает и при отпускании ALT (currentHitEntity станет Entity.Null)
             if (currentHitEntity != _lastHoveredEntity)
             {
                 var bridge = EntityBridge.GetOrCreateBridge(World);

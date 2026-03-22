@@ -11,33 +11,33 @@ namespace DotsBridge.Test
 
         private bool _wasValid = true;
 
-        void OnEnable()
+        private void OnEnable()
         {
             EntityBridge.OnPlacementSuccess += HandlePlacementSuccess;
             EntityBridge.OnPlacementFailed += HandlePlacementFailed;
             EntityBridge.OnDuctDrawingStarted += HandleDuctDrawing;
         }
 
-        void OnDisable()
+        private void OnDisable()
         {
             EntityBridge.OnPlacementSuccess -= HandlePlacementSuccess;
             EntityBridge.OnPlacementFailed -= HandlePlacementFailed;
             EntityBridge.OnDuctDrawingStarted -= HandleDuctDrawing;
         }
         
-        void Update()
+        private void Update()
         {
-            // --- 1. СПАВН НОВОГО ОБЪЕКТА ---
             if (Input.GetKeyDown(KeyCode.Alpha1))
             {
                 EntityBridge.InCurrentWorld().BeginSpawn(_prefabNameToSpawn).Spawn().BeginPlacement(_step);
+                EntityBridge.InCurrentWorld().ToggleCurrentGridSnap();
                 Debug.Log("[SimBridge Editor] Выбран компонент. ЛКМ - разместить, G - вкл/выкл сетку.");
             }
             if (Input.GetMouseButtonDown(1)) // 1 - правая кнопка мыши
             {
-                EntityBridge.InCurrentWorld().FindWithComponent<HingeState>().ToggleHinge();
+                EntityBridge.InCurrentWorld().GetEntityUnderMouse<HingeTrigger>().TriggerHinge();
             }
-            // --- 2. УПРАВЛЕНИЕ СЕТКОЙ ---
+            
             if (Input.GetKeyDown(KeyCode.G))
             {
                 bool isSnapActive = EntityBridge.InCurrentWorld().ToggleCurrentGridSnap();
@@ -51,7 +51,6 @@ namespace DotsBridge.Test
                 if (isValid != _wasValid)
                 {
                     _wasValid = isValid;
-                    // TODO: Смена материала на красный/зеленый
                 }
             }
 
@@ -65,11 +64,6 @@ namespace DotsBridge.Test
                 {
                     EntityBridge.InCurrentWorld().GetEntityUnderMouse<PlaceableTag>().BeginPlacement(_step);
                 }
-            }
-
-            if (Input.GetKeyDown(KeyCode.Escape))
-            {
-                EntityBridge.CancelCurrentPlacement();
             }
         }
 

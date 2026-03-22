@@ -72,7 +72,7 @@ namespace SimVent.Core
             int ductCount = 0;
 
             AirNodeAuthoring currentNode = targetRoom;
-            AirDuctAuthoring[] allDucts = Object.FindObjectsOfType<AirDuctAuthoring>();
+            AirDuctAuthoring[] allDucts = Object.FindObjectsByType<AirDuctAuthoring>(FindObjectsSortMode.None);
 
             int safeLimit = 100;
             while (currentNode != null && !currentNode.IsInfinite && safeLimit > 0)

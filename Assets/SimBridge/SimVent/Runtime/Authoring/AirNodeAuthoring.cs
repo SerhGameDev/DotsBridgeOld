@@ -11,14 +11,10 @@ public class AirNodeAuthoring : MonoBehaviour
     [Title("Параметры")]
     public float StartTemperature = 20f;
 
-    [HideIf("IsInfiniteStreet")]
     public float Volume = 100f;
 
-    [HideIf("IsInfiniteStreet")]
     public float HeatLossFactor = 0.01f;
 
-    // НОВЫЙ ПАРАМЕТР
-    [HideIf("IsInfiniteStreet")]
     [PropertyTooltip("0 - полная герметичность, 0.5 - дырявая комната")]
     public float LeakFactor = 0.1f;
 

@@ -20,10 +20,10 @@ namespace SimVent.Authoring
                 {
                     SourceNode = GetEntity(authoring.SourceNode, TransformUsageFlags.None),
                     TargetNode = GetEntity(authoring.TargetNode, TransformUsageFlags.None),
-                    CurrentFlowRate = 0f,
+                    CurrentFlowRate = 20f,
                     AirTemperature = 0f
                 }); 
-                AddComponent(entity, new DuctStateComponent { TotalResistance = 0.5f });
+                AddComponent(entity, new DuctStateComponent());
             }
         }
     }

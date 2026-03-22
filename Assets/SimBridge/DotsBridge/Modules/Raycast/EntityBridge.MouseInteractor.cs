@@ -9,8 +9,8 @@ namespace DotsBridge
         public static event Action<SingleEntity> OnMouseEnter;
         public static event Action<SingleEntity> OnMouseExit;
 
-        internal static void TriggerMouseEnter(SingleEntity entity) => OnMouseEnter?.Invoke(entity);
-        internal static void TriggerMouseExit(SingleEntity entity) => OnMouseExit?.Invoke(entity);
+        internal static void TriggerMouseEnter(this SingleEntity entity) => OnMouseEnter?.Invoke(entity);
+        internal static void TriggerMouseExit(this SingleEntity entity) => OnMouseExit?.Invoke(entity);
 
         /// <summary>
         /// Быстрая проверка: наведена ли мышь на эту конкретную сущность прямо сейчас?

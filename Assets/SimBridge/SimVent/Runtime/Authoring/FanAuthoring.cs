@@ -45,6 +45,7 @@ namespace SimVent.Authoring
         [FoldoutGroup("🛠 Автоподбор (по данным HVAC Sizer)")]
         [Button("Применить к вентилятору", ButtonSizes.Medium)]
         [GUIColor(0.4f, 0.8f, 1f)]
+        public float VisualRotationMultiplier = 10f;
         private void ApplyCalculatedSettings()
         {
             // Считаем множитель запаса (например, 20% = 1.2)
