@@ -1,5 +1,6 @@
-﻿using System.Linq;
-using DotsBridge.UI.Positioning; // Не забудь добавить namespace
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -17,86 +18,105 @@ namespace DotsBridge.UI
         public VisualTreeAsset ValueTemplate;
         public VisualTreeAsset StatusTemplate;
 
-        [Header("Positioning")]
-        [Tooltip("Перетащи сюда компонент стратегии (например, MouseCursorStrategy)")]
-        public PopupPositionStrategy PositionStrategy;
-
         private VisualElement _root;
-        private VisualElement _popupInstance;
-        private VisualElement _contentContainer;
+        private readonly List<PopupController> _registeredPopups = new List<PopupController>();
 
         private void Awake()
         {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
+            if (Instance != null && Instance != this) { Destroy(gameObject); return; }
             Instance = this;
-            
-            // Если стратегия не назначена вручную, ищем её на этом же GameObject
-            if (PositionStrategy == null)
-            {
-                PositionStrategy = GetComponent<PopupPositionStrategy>();
-            }
         }
 
         private void OnEnable()
         {
             if (Document != null) _root = Document.rootVisualElement;
-            PopupDispatcher.OnShowPopup += BuildAndShowPopup;
-            PopupDispatcher.OnHidePopup += HidePopup;
+            
+            // Подписываемся напрямую на события моста
+            EntityBridge.OnMouseEnter += HandleMouseEnter;
+            EntityBridge.OnMouseExit += HandleMouseExit;
         }
 
         private void OnDisable()
         {
-            PopupDispatcher.OnShowPopup -= BuildAndShowPopup;
-            PopupDispatcher.OnHidePopup -= HidePopup;
-        }
-
-        private void BuildAndShowPopup(PopupBuilder builder)
-        {
-            if (_root == null || PopupBaseTemplate == null || PositionStrategy == null) return;
-
-            HidePopup();
-
-            _popupInstance = PopupBaseTemplate.Instantiate().Children().First();
-            _contentContainer = _popupInstance.Q<VisualElement>("PopupContent") ?? _popupInstance;
-
-            // ... (Код генерации строк остается без изменений из предыдущего шага) ...
-            // foreach (var row in builder.Rows) { ... }
-
-            // Делегируем логику добавления и начальной настройки стратегии
-            PositionStrategy.OnPopupCreated(_popupInstance, _root);
-            
-            // Сразу применяем координаты, чтобы избежать фликера в 1 кадр
-            PositionStrategy.ApplyPosition(_popupInstance); 
-        }
-
-        private void HidePopup()
-        {
-            if (_popupInstance != null)
-            {
-                if (PositionStrategy != null)
-                {
-                    PositionStrategy.OnPopupDestroyed(_popupInstance, _root);
-                }
-
-                if (_popupInstance.parent != null)
-                {
-                    _popupInstance.parent.Remove(_popupInstance);
-                }
-                _popupInstance = null;
-            }
+            EntityBridge.OnMouseEnter -= HandleMouseEnter;
+            EntityBridge.OnMouseExit -= HandleMouseExit;
         }
 
         private void Update()
         {
-            if (_popupInstance != null && PositionStrategy != null)
+            // Обновляем позиции всех открытых окон
+            foreach (var popup in _registeredPopups)
             {
-                // Стратегия сама решает, нужно ли двигать элемент
-                PositionStrategy.ApplyPosition(_popupInstance);
+                popup.UpdatePosition();
             }
+        }
+        public void RegisterDefinition(IPopupDefinition definition)
+        {
+            var controller = new PopupController(this, definition);
+            _registeredPopups.Add(controller);
+        }
+        /// <summary>
+        /// Главный метод для регистрации новых окон из любого места в коде.
+        /// </summary>
+        public PopupController RegisterPopup(Func<SingleEntity, bool> condition)
+        {
+            var controller = new PopupController(this, condition);
+            _registeredPopups.Add(controller);
+            return controller;
+        }
+
+        // --- Обработчики событий ---
+
+        private void HandleMouseEnter(SingleEntity entity)
+        {
+            if (_root == null) return;
+            // Каждое зарегистрированное окно само проверит, нужно ли ему открываться
+            foreach (var popup in _registeredPopups)
+            {
+                popup.TryOpen(entity, _root);
+            }
+        }
+
+        private void HandleMouseExit(SingleEntity entity)
+        {
+            foreach (var popup in _registeredPopups)
+            {
+                popup.Close(_root);
+            }
+        }
+
+        // --- Фабричные методы для Controller'ов ---
+
+        internal VisualElement InstantiateBasePopup()
+        {
+            return PopupBaseTemplate.Instantiate().Children().First();
+        }
+
+        internal VisualElement CreateRowElement(PopupRowData row)
+        {
+            VisualElement rowElement = null;
+            switch (row.Type)
+            {
+                case PopupRowType.Header:
+                    if (HeaderTemplate) { rowElement = HeaderTemplate.Instantiate(); rowElement.Q<Label>("HeaderLabel").text = row.Label; }
+                    break;
+                case PopupRowType.Text:
+                    if (TextTemplate) { rowElement = TextTemplate.Instantiate(); rowElement.Q<Label>("NameLabel").text = row.Label; rowElement.Q<Label>("ValueLabel").text = row.StringValue; }
+                    break;
+                case PopupRowType.Value:
+                    if (ValueTemplate) { rowElement = ValueTemplate.Instantiate(); rowElement.Q<Label>("NameLabel").text = row.Label; rowElement.Q<Label>("ValueLabel").text = $"{row.FloatValue} {row.StringValue}"; }
+                    break;
+                case PopupRowType.Status:
+                    if (StatusTemplate) { 
+                        rowElement = StatusTemplate.Instantiate(); 
+                        rowElement.Q<Label>("NameLabel").text = row.Label; 
+                        var lbl = rowElement.Q<Label>("StatusLabel");
+                        lbl.text = row.BoolValue ? "ON" : "OFF";
+                        lbl.style.color = row.BoolValue ? new StyleColor(Color.green) : new StyleColor(Color.red);
+                    }
+                    break;
+            }
+            return rowElement;
         }
     }
 }
