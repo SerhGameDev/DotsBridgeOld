@@ -55,12 +55,16 @@ namespace DotsBridge.UI
             var controller = new PopupController(this, definition);
             _registeredPopups.Add(controller);
         }
+
         /// <summary>
-        /// Главный метод для регистрации новых окон из любого места в коде.
+        /// Главный метод для быстрой регистрации окон через лямбды.
         /// </summary>
         public PopupController RegisterPopup(Func<SingleEntity, bool> condition)
         {
-            var controller = new PopupController(this, condition);
+            // Оборачиваем лямбду в анонимное определение
+            var definition = new AnonymousPopupDefinition(condition);
+            var controller = new PopupController(this, definition);
+    
             _registeredPopups.Add(controller);
             return controller;
         }
