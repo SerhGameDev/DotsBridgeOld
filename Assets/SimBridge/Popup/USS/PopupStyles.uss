@@ -1,0 +1,38 @@
+.popup-container {
+    background-color: rgba(28, 32, 38, 0.95);
+    border-radius: 6px;
+    border-width: 1px;
+    border-color: #454d59;
+    padding: 12px;
+    min-width: 220px;
+    color: #e0e0e0;
+    /* Небольшая тень для отделения от 3D мира */
+    -unity-text-outline-width: 0;
+}
+
+.popup-header {
+    font-size: 16px;
+    -unity-font-style: bold;
+    color: #ffffff;
+    margin-bottom: 10px;
+    padding-bottom: 4px;
+    border-bottom-width: 1px;
+    border-bottom-color: #555555;
+}
+
+.popup-row {
+    flex-direction: row;
+    justify-content: space-between;
+    margin-bottom: 4px;
+    font-size: 14px;
+}
+
+.row-label {
+    color: #a0aab5;
+}
+
+.row-value {
+    -unity-font-style: bold;
+    color: #ffffff;
+    -unity-text-align: middle-right;
+}

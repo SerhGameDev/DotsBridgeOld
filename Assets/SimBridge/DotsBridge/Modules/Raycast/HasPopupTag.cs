@@ -6,7 +6,7 @@ namespace DotsBridge
     /// <summary>
     /// Вешается на сущности, у которых есть данные для всплывающего окна.
     /// </summary>
-    public struct HasPopupTag : IComponentData { }
+    public struct HasPopupTag : IPrototypeTag { }
     /// <summary>
     /// Хранит локализованное или базовое имя сущности для отображения в UI.
     /// </summary>

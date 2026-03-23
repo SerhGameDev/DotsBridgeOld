@@ -707,7 +707,7 @@ GameObject:
   - component: {fileID: 1534578164}
   - component: {fileID: 1534578163}
   - component: {fileID: 1534578162}
-  - component: {fileID: 1534578161}
+  - component: {fileID: 1534578165}
   m_Layer: 5
   m_Name: UIDocument
   m_TagString: Untagged
@@ -715,19 +715,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1534578161
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1534578160}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bd7705dec4b04e42b4b9a8d356d55673, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: SimBridge::GameUIInitializer
-  _manager: {fileID: 1534578162}
 --- !u!114 &1534578162
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -741,11 +728,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: SimBridge::DotsBridge.UI.PopupManager
   Document: {fileID: 1534578163}
-  PopupBaseTemplate: {fileID: 0}
-  HeaderTemplate: {fileID: 0}
-  TextTemplate: {fileID: 0}
-  ValueTemplate: {fileID: 0}
-  StatusTemplate: {fileID: 0}
+  PopupBaseTemplate: {fileID: 9197481963319205126, guid: 2a3a06d50a8ff1c4f923d732b6afb987, type: 3}
+  HeaderTemplate: {fileID: 9197481963319205126, guid: 5ce9dec8d32dff346be04187427d6cfd, type: 3}
+  TextTemplate: {fileID: 9197481963319205126, guid: 36989a218e2fd8240a7b698632763e21, type: 3}
+  ValueTemplate: {fileID: 9197481963319205126, guid: 36989a218e2fd8240a7b698632763e21, type: 3}
+  StatusTemplate: {fileID: 9197481963319205126, guid: d6c34653e34a9ec44bdddc918596a124, type: 3}
 --- !u!114 &1534578163
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -760,7 +747,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.dll::UnityEngine.UIElements.UIDocument
   m_PanelSettings: {fileID: 11400000, guid: 1d16465147903994ca747a4fc3c086cf, type: 2}
   m_ParentUI: {fileID: 0}
-  sourceAsset: {fileID: 0}
+  sourceAsset: {fileID: 9197481963319205126, guid: 8e94038a0c2c85c43929cd9a763e2341, type: 3}
   m_SortingOrder: 0
   m_Position: 0
   m_WorldSpaceSizeMode: 1
@@ -784,6 +771,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1534578165
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1534578160}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2446f87007504788b2e15926f4ce0287, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SimBridge::DotsBridge.UI.PopupInstaller
 --- !u!1 &1620104648
 GameObject:
   m_ObjectHideFlags: 0

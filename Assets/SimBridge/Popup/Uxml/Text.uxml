@@ -1,0 +1,7 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/SimBridge/Popup/USS/PopupStyles.uss?fileID=7433441132597879392&amp;guid=c85ed8d913733db40a4319d7b189197b&amp;type=3#PopupStyles"/>
+    <ui:VisualElement name="popup-row" class="popup-row" style="flex-grow: 1;">
+        <ui:Label text="Label" name="NameLabel" class="row-label"/>
+        <ui:Label text="Label" name="ValueLabel" class="row-value"/>
+    </ui:VisualElement>
+</ui:UXML>
