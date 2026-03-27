@@ -174,8 +174,29 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4435949860729910392, guid: 490f48c91dd836742a13aae3e8479845, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2082568549}
   m_SourcePrefab: {fileID: 100100000, guid: 490f48c91dd836742a13aae3e8479845, type: 3}
+--- !u!1 &2082568544 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4435949860729910392, guid: 490f48c91dd836742a13aae3e8479845, type: 3}
+  m_PrefabInstance: {fileID: 1633042068}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &2082568549
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2082568544}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 25f826b5945b7424db0297a5196d0dd3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DotsBridge.PrefabContainerAuthoring
+  Prefabs: []
 --- !u!1 &2120876997
 GameObject:
   m_ObjectHideFlags: 0

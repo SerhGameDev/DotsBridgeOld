@@ -28,4 +28,5 @@ namespace SimOil
         public float CurrentValue;  // Текущее физическое значение (открытие или текущая теплоотдача)
         public bool IsFaulty;       // Флаг поломки (авария)
     }
+    // Компонент насоса. Размещается на той же сущности, что и FluidLink.
 }
