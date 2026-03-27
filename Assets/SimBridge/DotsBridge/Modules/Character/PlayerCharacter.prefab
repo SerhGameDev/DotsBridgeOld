@@ -30,8 +30,8 @@ Transform:
   m_GameObject: {fileID: 1741793129460954052}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -8.33, y: 6, z: -4.08}
-  m_LocalScale: {x: 1.6541, y: 3.2673435, z: 1.6541}
+  m_LocalPosition: {x: 0, y: 8.9, z: 0}
+  m_LocalScale: {x: 11.584999, y: 11.584999, z: 11.584999}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -51,7 +51,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1741793129460954052}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -105,12 +105,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f0ca7435389647988e1036c45444bb36, type: 3}
   m_Name: 
   m_EditorClassIdentifier: DotsBridge::DotsBridge.Character.CharacterAuthoring
-  MoveSpeed: 10
+  MoveSpeed: 20
   LookSpeed: 2
-  StepHeight: 0.3
+  StepHeight: 8.9
   CharacterRadius: 0.4
   Gravity: -15
-  EyeHeight: 3.44
+  EyeHeight: 8.9
   StartAsActivePlayer: 0
 --- !u!114 &4652903327488409993
 MonoBehaviour:

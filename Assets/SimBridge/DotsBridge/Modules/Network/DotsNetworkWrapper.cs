@@ -27,9 +27,9 @@ namespace DotsBridge.Modules.Network
 
         private void Awake()
         {
+            QualitySettings.vSyncCount = 0; 
             Application.targetFrameRate = 120;
-            QualitySettings.vSyncCount = 1;
-            Application.runInBackground = true; 
+            Application.runInBackground = true;
             SetupSingleton();
         }
 
@@ -53,7 +53,35 @@ namespace DotsBridge.Modules.Network
             Instance = this;
             DontDestroyOnLoad(gameObject);
         }
+        public void ApplyTickRate()
+        {
+            var serverWorld = EntityBridge.InServerWorld().World; 
+    
+            if (serverWorld != null && serverWorld.IsCreated)
+            {
+                var em = serverWorld.EntityManager;
+        
+                var tickRateSettings = new ClientServerTickRate
+                {
+                    SimulationTickRate = this.SimulationTickRate,
+                    NetworkTickRate = this.NetworkTickRate,
+                    // Вот правильное название поля:
+                    MaxSimulationStepsPerFrame = (byte)this.MaxBatchedTicks 
+                };
 
+                var query = em.CreateEntityQuery(typeof(ClientServerTickRate));
+        
+                if (query.HasSingleton<ClientServerTickRate>())
+                {
+                    query.SetSingleton(tickRateSettings);
+                }
+                else
+                {
+                    var entity = em.CreateEntity(typeof(ClientServerTickRate));
+                    em.SetComponentData(entity, tickRateSettings);
+                }
+            }
+        }
         /// <summary>
         /// Публичный метод. Удобно вызывать с кнопок UI.
         /// </summary>
@@ -73,6 +101,8 @@ namespace DotsBridge.Modules.Network
                     DotsNetworkManager.StartHost(ServerIP, ServerPort);
                     break;
             }
+
+            ApplyTickRate();
         }
     }
 }

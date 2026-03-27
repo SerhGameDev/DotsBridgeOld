@@ -11,7 +11,6 @@ namespace SimVent.Systems
             // Получаем доступ к нашему синглтону времени
             if (SystemAPI.TryGetSingletonRW<SimulationTimeComponent>(out var timeData))
             {
-                // Прибавляем строго 0.02 секунды каждый физический тик
                 timeData.ValueRW.TotalTime += timeData.ValueRO.FixedStep;
             }
         }

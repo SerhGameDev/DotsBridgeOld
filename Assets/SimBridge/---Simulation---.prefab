@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 5131368541942970410}
   - component: {fileID: 5533407705764674550}
   - component: {fileID: 5657671557285640476}
+  - component: {fileID: 2729452622958736909}
   m_Layer: 0
   m_Name: ---Simulation---
   m_TagString: Untagged
@@ -80,3 +81,18 @@ MonoBehaviour:
   DeadHeadOverheatRate: 50
   DeadHeadCooldownRate: 0.05
   PressureMultiplier: 10000
+--- !u!114 &2729452622958736909
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4435949860729910392}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f12866509c250f040aaba19bc50c600f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SimOil.SimulationOilControlAuthoring
+  isRunning: 1
+  timeScale: 1
+  ambientTemperature: 20
