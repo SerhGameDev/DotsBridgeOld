@@ -386,8 +386,6 @@ MonoBehaviour:
     Prefab: {fileID: 4631058359380214761, guid: bfcc9432dbd720f4d8b5d3f417773aa0, type: 3}
   - Name: PlayerCharacter
     Prefab: {fileID: 1741793129460954052, guid: f784f222b8548e3459a334399755dda2, type: 3}
-  - Name: MainHero_1
-    Prefab: {fileID: 311404811379675160, guid: 8dd4df157c150f04fb6db4e6139b1a87, type: 3}
 --- !u!4 &464305428
 Transform:
   m_ObjectHideFlags: 0
@@ -924,8 +922,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eac7f84aef364ac4895198f41f9cc831, type: 3}
   m_Name: 
   m_EditorClassIdentifier: DotsBridge::DotsBridge.DotsBridgeBootstrapper
-  Mode: 3
-  AutoInitializeNetcode: 1
+  Mode: 2
+  AutoInitializeNetcode: 0
 --- !u!4 &1359655776
 Transform:
   m_ObjectHideFlags: 0

@@ -45,7 +45,7 @@ namespace DotsBridge
                 sysHandle.OnReceived += onReceive;
             }
         }
-        public static void SendRpc<T>(this BridgeWorld bridge, T command) where T : unmanaged, IRpcCommand
+        /*public static void SendRpc<T>(this BridgeWorld bridge, T command) where T : unmanaged, IRpcCommand
         {
             if (bridge == null) return;
             EnsureRpcSystemExists<T>();
@@ -67,7 +67,7 @@ namespace DotsBridge
             {
                 bridge.Manager.AddComponentData(rpcEntity, new SendRpcCommandRequest());
             }
-        }
+        }*/
         /// <summary>
         /// Отписаться от RPC (важно делать при уничтожении объектов, чтобы избежать утечек).
         /// </summary>

@@ -55,31 +55,43 @@ namespace DotsBridge.Modules.Network
         }
         public void ApplyTickRate()
         {
-            var serverWorld = EntityBridge.InServerWorld().World; 
-    
-            if (serverWorld != null && serverWorld.IsCreated)
+            var serverBridge = EntityBridge.InServerWorld(); 
+            if (serverBridge != null && serverBridge.World != null && serverBridge.World.IsCreated)
             {
-                var em = serverWorld.EntityManager;
-        
-                var tickRateSettings = new ClientServerTickRate
-                {
-                    SimulationTickRate = this.SimulationTickRate,
-                    NetworkTickRate = this.NetworkTickRate,
-                    // Вот правильное название поля:
-                    MaxSimulationStepsPerFrame = (byte)this.MaxBatchedTicks 
-                };
+                ApplyTickRateToWorld(serverBridge.World);
+                Debug.Log("[DotsNetworkWrapper] Tick rate applied to Server World.");
+            }
 
-                var query = em.CreateEntityQuery(typeof(ClientServerTickRate));
-        
-                if (query.HasSingleton<ClientServerTickRate>())
-                {
-                    query.SetSingleton(tickRateSettings);
-                }
-                else
-                {
-                    var entity = em.CreateEntity(typeof(ClientServerTickRate));
-                    em.SetComponentData(entity, tickRateSettings);
-                }
+            // 2. Safely attempt to get the Client Bridge (Clients need tick rates too!)
+            var clientBridge = EntityBridge.InClientWorld();
+            if (clientBridge != null && clientBridge.World != null && clientBridge.World.IsCreated)
+            {
+                ApplyTickRateToWorld(clientBridge.World);
+                Debug.Log("[DotsNetworkWrapper] Tick rate applied to Client World.");
+            }
+        }
+
+        private void ApplyTickRateToWorld(World world)
+        {
+            var em = world.EntityManager;
+    
+            var tickRateSettings = new ClientServerTickRate
+            {
+                SimulationTickRate = this.SimulationTickRate,
+                NetworkTickRate = this.NetworkTickRate,
+                MaxSimulationStepsPerFrame = (byte)this.MaxBatchedTicks 
+            };
+
+            var query = em.CreateEntityQuery(typeof(ClientServerTickRate));
+    
+            if (query.HasSingleton<ClientServerTickRate>())
+            {
+                query.SetSingleton(tickRateSettings);
+            }
+            else
+            {
+                var entity = em.CreateEntity(typeof(ClientServerTickRate));
+                em.SetComponentData(entity, tickRateSettings);
             }
         }
         /// <summary>

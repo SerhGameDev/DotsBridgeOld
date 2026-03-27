@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Entities;
-using Unity.NetCode;
 
 namespace DotsBridge
 {
@@ -17,10 +16,17 @@ namespace DotsBridge
         public readonly Dictionary<Entity, Action<Entity>> OnDestroyEvents = new Dictionary<Entity, Action<Entity>>();
 
         public bool IsPrefabBufferCached;
+
+        // Постоянный пустой список-заглушка
+        private NativeList<Entity> _emptyList;
+
         public BridgeWorld(World world)
         {
             World = world;
             Manager = world.EntityManager;
+            
+            // Инициализируем пустой список один раз при создании мира
+            _emptyList = new NativeList<Entity>(Allocator.Persistent);
         }
 
         public void Dispose()
@@ -30,6 +36,10 @@ namespace DotsBridge
                 if (list.IsCreated) list.Dispose();
             }
             Groups.Clear();
+
+            // Обязательно очищаем заглушку
+            if (_emptyList.IsCreated) _emptyList.Dispose();
+
             TagRegistry.Clear();
             Prefabs.Clear();
             OnDestroyEvents.Clear();
@@ -57,18 +67,14 @@ namespace DotsBridge
             }
         }
 
-        /// <summary>
-        /// Выдает безопасный фасад ListEntity для работы с группой
-        /// </summary>
         public ListEntity GetGroupBatch(int hash)
         {
             if (Groups.TryGetValue(hash, out var list))
             {
-                // Используем внутренний конструктор, который мы сделали ранее
                 return new ListEntity(this, list);
             }
-            // Возвращаем пустой батч, если группы нет
-            return new ListEntity(this, Allocator.Temp);
+            // Возвращаем безопасную ссылку на пустой Persistent-список
+            return new ListEntity(this, _emptyList);
         }
     }
 }
