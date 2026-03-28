@@ -13,7 +13,7 @@ namespace SimOil.Systems
 
         public void OnUpdate(ref SystemState state)
         {
-            // 1. Проверка: вообще ли заходит в Update?
+            /*// 1. Проверка: вообще ли заходит в Update?
             // Мы не будем спамить это сообщение, выведем его раз в 2 секунды, даже если симуляция стоит
             bool isHeartbeat = SystemAPI.Time.ElapsedTime > _nextTickTime - 0.1f; 
 
@@ -67,7 +67,7 @@ namespace SimOil.Systems
             foreach (var (link, entity) in SystemAPI.Query<RefRO<FluidLink>>().WithEntityAccess())
             {
                 Debug.Log($"<color=yellow>→ Связь {entity.Index}:</color> Flow={link.ValueRO.CurrentFlowRateMass:F3} (от {link.ValueRO.NodeA.Index} к {link.ValueRO.NodeB.Index})");
-            }
+            }*/
         }
     }
 }

@@ -2,6 +2,7 @@ using DotsBridge;
 using DotsBridge.Interaction;
 using DotsBridge.Placement;
 using SimElectric;
+using SimOil;
 using UnityEngine;
 
 public class PlacementTestController : MonoBehaviour
@@ -27,13 +28,56 @@ public class PlacementTestController : MonoBehaviour
     
     private void Update()
     {
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+            // 1. ВАЖНО: Мы берем именно Клиентский мир! 
+            // InCurrentWorld может вернуть Серверный мир, если мы играем за Хоста, 
+            // но для UI всегда правильнее и безопаснее читать из мира Клиента (призраков).
+            var clientBridge = EntityBridge.InClientWorld();
+            
+            if (clientBridge == null)
+            {
+                Debug.LogWarning("Клиентский мир еще не создан или мы не подключены.");
+                return;
+            }
+
+            // 2. Ищем все сущности с жидкостью.
+            // ВАЖНО: Так как твой метод FindWithComponent создает NativeList (Temp), 
+            // мы обязательно используем ключевое слово 'using', чтобы память очистилась в конце кадра!
+            using var batch = clientBridge.FindWithComponent<FluidMixture>();
+
+            if (batch.Count == 0)
+            {
+                Debug.Log("На клиенте пока нет узлов FluidMixture (Призраки еще не прилетели).");
+                return;
+            }
+
+            Debug.Log($"=== ДАННЫЕ С СЕРВЕРА (Найдено узлов: {batch.Count}) ===");
+
+            var em = clientBridge.Manager;
+
+            // 3. Перебираем все найденные сущности в батче
+            for (int i = 0; i < batch.Count; i++)
+            {
+                var entity = batch.Entities[i];
+                    
+                // Читаем синхронизированный компонент
+                var mixture = em.GetComponentData<FluidMixture>(entity);
+
+                // Выводим в консоль
+                Debug.Log($"Узел [Entity {entity.Index}]: " +
+                          $"Масса = {mixture.TotalMass:F1} кг | " +
+                          $"Давление = {mixture.Pressure:F2} МПа | " +
+                          $"Температура = {mixture.Temperature:F1}°C");
+            }
+        }
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
             EntityBridge.InCurrentWorld().BeginSpawn(_prefabNameToSpawn).Spawn().BeginPlacement(_step);
             EntityBridge.InCurrentWorld().ToggleCurrentGridSnap();
             Debug.Log("[SimBridge Editor] Выбран компонент. ЛКМ - разместить, G - вкл/выкл сетку.");
         }
-        if (Input.GetMouseButtonDown(1)) // 1 - правая кнопка мыши
+        if (Input.GetMouseButtonDown(1))
         {
             EntityBridge.InCurrentWorld().GetEntityUnderMouse<HingeTrigger>().TriggerHinge();
             EntityBridge.InCurrentWorld().GetEntityUnderMouse<PushButtonTrigger>().TriggerButton();

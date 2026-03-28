@@ -981,17 +981,25 @@ MonoBehaviour:
   AutoDetectHeadless: 1
   LimitFPS: 1
   TargetFPS: 60
+  RunInBackground: 1
   SimulationTickRate: 60
   NetworkTickRate: 60
   MaxBatchedTicks: 5
-  UseLocalhost: 1
+  UseLocalhost: 0
   TargetServerIP: 127.0.0.1
-  ServerPort: 7979
+  ServerPort: 7977
   LoadMode: 2
   MainSharedScene: {fileID: 595147844}
   SharedSubScene: {fileID: 595147844}
   ServerSubScene: {fileID: 1723676976}
   ClientSubScene: {fileID: 209431218}
+  AutoAcceptConnections: 1
+  ServerPassword: 1234
+  MaxPlayers: 64
+  DefaultNickname: Player_123
+  DefaultPassword: 1234
+  ActiveClientNickname: 
+  ActiveClientPassword: 
 --- !u!4 &1359655776
 Transform:
   m_ObjectHideFlags: 0
@@ -1324,6 +1332,7 @@ GameObject:
   - component: {fileID: 2132253611}
   - component: {fileID: 2132253610}
   - component: {fileID: 2132253609}
+  - component: {fileID: 2132253613}
   m_Layer: 5
   m_Name: UIDocument
   m_TagString: Untagged
@@ -1399,6 +1408,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2132253613
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2132253608}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ede1101060554562bf4c9f2c166d8dfe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DotsBridge.UI.NetworkDebugUI
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

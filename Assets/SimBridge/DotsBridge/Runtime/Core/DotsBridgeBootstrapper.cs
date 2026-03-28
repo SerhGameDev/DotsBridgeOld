@@ -9,6 +9,7 @@ using Unity.Networking.Transport;
 using Unity.Scenes;
 using UnityEngine;
 using UnityEngine.Rendering;
+using Random = UnityEngine.Random;
 
 namespace DotsBridge
 {public enum Role
@@ -56,6 +57,9 @@ namespace DotsBridge
         [ShowIf("LimitFPS")]
         [Tooltip("Ограничение FPS главного потока Unity. Снимает нагрузку с CPU.")]
         public int TargetFPS = 60;
+        
+        [BoxGroup("Performance Configuration")]
+        public bool RunInBackground = true;
         
         [BoxGroup("Performance Configuration")]
         [Tooltip("Настройки Netcode Tick Rate (Симуляция).")]
@@ -125,7 +129,7 @@ namespace DotsBridge
         [BoxGroup("Client Profile", centerLabel: true)]
         [ShowIf("@CurrentRole == Role.Client || CurrentRole == Role.ServerClient")]
         [InfoBox("Эти данные используются, если клиент стартует автоматически. Для UI используйте класс ConnectionBuilder.")]
-        public string DefaultNickname = "Player_" + UnityEngine.Random.Range(1000, 9999); // Небольшой хак для тестов
+        public string DefaultNickname; // Небольшой хак для тестов
 
         [BoxGroup("Client Profile")]
         [ShowIf("@CurrentRole == Role.Client || CurrentRole == Role.ServerClient")]
@@ -141,6 +145,7 @@ namespace DotsBridge
 
         private void Awake()
         {
+            DefaultNickname = "Player_" + Random.Range(1000, 9999);
             SetupSingleton();
             ApplyHeadlessDetection();
             ApplyFramerateSettings();
@@ -177,7 +182,7 @@ namespace DotsBridge
         {
             QualitySettings.vSyncCount = 0;
             Application.targetFrameRate = LimitFPS ? TargetFPS : -1;
-            Application.runInBackground = true;
+            Application.runInBackground = RunInBackground;
         }
 
         // --- НОВЫЙ МЕТОД: Получение LAN IP для инспектора ---
@@ -228,6 +233,7 @@ namespace DotsBridge
         private void ApplyTickRateToWorld(World world)
         {
             if (world == null || !world.IsCreated) return;
+
             var em = world.EntityManager;
             var tickRateSettings = new ClientServerTickRate
             {
@@ -235,8 +241,21 @@ namespace DotsBridge
                 NetworkTickRate = this.NetworkTickRate,
                 MaxSimulationStepsPerFrame = (byte)this.MaxBatchedTicks
             };
+
+            // 1. Находим все сущности, у которых есть ClientServerTickRate
+            using var query = em.CreateEntityQuery(typeof(ClientServerTickRate));
+            
+            // 2. Если они уже существуют (Netcode создал дефолтный или загрузилась сцена) — жестко удаляем их все, чтобы избежать дубликатов.
+            if (!query.IsEmptyIgnoreFilter)
+            {
+                em.DestroyEntity(query);
+            }
+
+            // 3. Создаем ровно один, наш чистый экземпляр с нужными настройками
             var entity = em.CreateEntity(typeof(ClientServerTickRate));
             em.SetComponentData(entity, tickRateSettings);
+            
+            Debug.Log($"[DotsBridge] TickRate применен к миру {world.Name}. Старые дубликаты очищены.");
         }
 
         private void LoadSceneIntoWorld(World world, SubScene subScene)
