@@ -410,7 +410,7 @@
                 #endif
                 #endif
 
-                ///
+ ///
                 /// COMPOSITE EDGES
                 ///
 
@@ -429,16 +429,18 @@
                 line_color = lerp(line_color, _OutlineColorShadow, shadow);
                 #endif
 
+                // Исправлено: уникальное имя distanceFade
                 #if defined(FADE_BY_DISTANCE)
-                float distance = length(positionWS - _WorldSpaceCameraPos);
-                float fade = 1.0 - saturate(1.0 - (distance - _DistanceFadeStart) / _DistanceFadeDistance);
-                line_color = lerp(line_color, _DistanceFadeColor * _DistanceFadeColor.a, fade);
+                float dist = length(positionWS - _WorldSpaceCameraPos);
+                float distanceFade = 1.0 - saturate(1.0 - (dist - _DistanceFadeStart) / _DistanceFadeDistance);
+                line_color = lerp(line_color, _DistanceFadeColor * _DistanceFadeColor.a, distanceFade);
                 #endif
 
+                // Исправлено: уникальное имя heightFade
                 #if defined(FADE_BY_HEIGHT)
                 float height = positionWS.y;
-                float fade = 1.0 - saturate(1.0 - (height - _HeightFadeStart) / _HeightFadeDistance);
-                line_color = lerp(line_color, _HeightFadeColor * _HeightFadeColor.a, fade);
+                float heightFade = 1.0 - saturate(1.0 - (height - _HeightFadeStart) / _HeightFadeDistance);
+                line_color = lerp(line_color, _HeightFadeColor * _HeightFadeColor.a, heightFade);
                 #endif
 
                 return lerp(_BackgroundColor, line_color, edge);

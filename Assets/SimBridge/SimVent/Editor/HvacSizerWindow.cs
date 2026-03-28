@@ -1,4 +1,4 @@
-using SimVent.Authoring;
+/*using SimVent.Authoring;
 using SimVent.Core;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
@@ -46,4 +46,4 @@ namespace SimVent.Editor
             Debug.Log($"<color=green>Расчет для {TargetRoom.gameObject.name} успешно выполнен!</color>");
         }
     }
-}
+}*/

@@ -2,6 +2,7 @@
 using Unity.Entities;
 using Unity.Mathematics;
 using SimBridge.Core.Time;
+using Unity.Collections;
 
 namespace SimOil.Systems
 {
@@ -44,15 +45,18 @@ namespace SimOil.Systems
 
             state.Dependency = flowJob.Schedule(state.Dependency);
         }
-
         [BurstCompile]
         private partial struct CalculateFlowJob : IJobEntity
         {
-            public ComponentLookup<FluidMixture> MixtureLookup;
+            // Здесь мы пишем и читаем, поэтому атрибут не нужен
+            public ComponentLookup<FluidMixture> MixtureLookup; 
+            
+            // ДОБАВЛЕН АТРИБУТ [ReadOnly]
+            [ReadOnly] 
             public ComponentLookup<PumpData> PumpLookup;
+            
             public float FixedStep;
 
-            // Передаем entity связи, чтобы иметь возможность проверить наличие PumpData
             public void Execute(Entity entity, ref FluidLink link)
             {
                 if (!MixtureLookup.HasComponent(link.NodeA) || !MixtureLookup.HasComponent(link.NodeB))

@@ -6,8 +6,8 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/DotsBridge/Samples/TestOne/Scenes/Core.unity
-    guid: 6b9ff6f6ed04e5647976a0dfe4a45479
+    path: Assets/SimBridge/SimOil/Sample/Scene/Sample.unity
+    guid: ed400fe9b2292f745a0aabfd43371cf4
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

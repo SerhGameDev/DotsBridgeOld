@@ -56,7 +56,7 @@ namespace SimVent.Authoring
             MaxFlowCapacity = TargetCalculatedFlow * multiplier;
 
             // Помечаем объект как "измененный", чтобы Unity сохранила сцену
-            UnityEditor.EditorUtility.SetDirty(this);
+            //UnityEditor.EditorUtility.SetDirty(this);
 
             Debug.Log($"<b>[Fan]</b> Настройки применены! Установлен напор: {MaxPressure:F1} Па, Расход: {MaxFlowCapacity:F1} м³/ч (С учетом запаса {MarginPercent}%)");
         }

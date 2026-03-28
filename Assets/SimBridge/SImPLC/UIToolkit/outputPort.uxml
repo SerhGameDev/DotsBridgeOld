@@ -1,6 +1,0 @@
-<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <ui:VisualElement name="Port" style="flex-grow: 1; flex-direction: row-reverse;">
-        <ui:VisualElement name="port-connector" style="flex-grow: 1; border-top-left-radius: 360px; border-top-right-radius: 360px; border-bottom-right-radius: 360px; border-bottom-left-radius: 360px; background-color: rgb(196, 196, 196); width: 15px; height: 15px; position: absolute; left: auto; right: -20px;"/>
-        <ui:Label text="Label" style="color: rgb(224, 224, 224); border-left-width: 30px;"/>
-    </ui:VisualElement>
-</ui:UXML>
