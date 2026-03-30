@@ -48,4 +48,27 @@ namespace SimOil
         // 0.0 - полностью закрыта, 1.0 - полностью открыта
         [GhostField] public float Openness; 
     }
+    
+    public enum FractionType : byte
+    {
+        None = 0,
+        Gas = 1,
+        LightNaphtha = 2,
+        HeavyNaphtha = 3,
+        Kerosene = 4,
+        LightDiesel = 5,
+        HeavyDiesel = 6,
+        Mazut = 7,
+        Water = 8
+    }
+
+    // Фильтр для трубы. Размещается на той же сущности, что и FluidLink.
+    public struct FractionFilter : IComponentData
+    {
+        public FractionType AllowedFraction;
+        
+        // Минимальная температура в узле-источнике, при которой фракция 
+        // начинает переходить в пар и проникать в эту трубу
+        public float MinBoilingTemperature; 
+    }
 }
