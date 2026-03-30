@@ -45,6 +45,7 @@ namespace DotsBridge.Core
             {
                 Network.CurrentRole = Role.Server;
                 Debug.Log("[DotsBridge] Headless режим. Запуск выделенного сервера.");
+                
             }
         }
 
