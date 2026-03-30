@@ -524,7 +524,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: DotsBridge::DotsBridge.DotsBridgeBootstrapper
   Network:
     CurrentRole: 0
-    IsAutoStart: 0
+    IsAutoStart: 1
     ClearWorldsOnStart: 0
     AutoDetectHeadless: 1
     LimitFPS: 1
@@ -947,7 +947,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2132253608}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d08a3669c61249bd926558c8f8b42a53, type: 3}
   m_Name: 
@@ -961,7 +961,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2132253608}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fd9759ac469f15c459d7455693e88d1d, type: 3}
   m_Name: 
@@ -973,7 +973,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2132253608}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe6d5827d8e346f4a9554c0728079503, type: 3}
   m_Name: 
