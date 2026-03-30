@@ -29,7 +29,7 @@ namespace SimBridge.UI
             UnityEngine.Time.timeScale = value;
 
             // 2. Опционально: сохраняем в компонент, если он вам нужен для других целей
-            using (var bridge = EntityBridge.InCurrentWorld().FindWithComponent<SimulationTimeComponent>())
+            using (var bridge = ClientBridge.World().FindWithComponent<SimulationTimeComponent>())
             {
                 if (bridge.Count > 0)
                 {
@@ -44,7 +44,7 @@ namespace SimBridge.UI
         private void Update()
         {
             // Отображаем общее время симуляции (сколько "виртуальных" часов прошло)
-            using (var bridge = EntityBridge.InCurrentWorld().FindWithComponent<SimulationTimeComponent>())
+            using (var bridge = ClientBridge.World().FindWithComponent<SimulationTimeComponent>())
             {
                 if (bridge.Count > 0)
                 {

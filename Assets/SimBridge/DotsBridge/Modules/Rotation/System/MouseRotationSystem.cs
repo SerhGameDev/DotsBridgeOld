@@ -19,7 +19,7 @@ namespace DotsBridge.Systems
             // --- 1. ЗАХВАТ ---
             if (Input.GetMouseButtonDown(0))
             {
-                var bridge = EntityBridge.InCurrentWorld();
+                var bridge = ClientBridge.World();
                 var hit = bridge.GetEntityUnderMouse<HoveredTag>();
 
                 // Проверяем: есть ли конфиг И включен ли "рубильник" CanBeMouseRotated

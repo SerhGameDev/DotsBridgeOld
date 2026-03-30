@@ -17,8 +17,8 @@ namespace DotsBridge
         /// </summary>
         public static bool IsHovered(this SingleEntity entity)
         {
-            if (entity.Entity == Unity.Entities.Entity.Null || InCurrentWorld() == null) return false;
-            return InClientWorld().Manager.HasComponent<HoveredTag>(entity.Entity);
+            if (entity.Entity == Unity.Entities.Entity.Null || ClientBridge.World() == null) return false;
+            return ClientBridge.World().Manager.HasComponent<HoveredTag>(entity.Entity);
         }
     }
 }

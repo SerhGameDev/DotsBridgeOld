@@ -52,7 +52,7 @@ namespace SimVent.UI
             _isDumpOpen = !_isDumpOpen;
             UpdateUIState();
 
-            using (var bridgeList = EntityBridge.InCurrentWorld().FindWithComponent<DamperComponent>())
+            using (var bridgeList = ClientBridge.World().FindWithComponent<DamperComponent>())
             {
                 for (int i = 0; i < bridgeList.Count; i++)
                 {
@@ -69,7 +69,7 @@ namespace SimVent.UI
             _isFanRunning = !_isFanRunning;
             UpdateUIState();
 
-            using (var bridgeList = EntityBridge.InCurrentWorld().FindWithComponent<FanComponent>())
+            using (var bridgeList = ClientBridge.World().FindWithComponent<FanComponent>())
             {
                 for (int i = 0; i < bridgeList.Count; i++)
                 {
@@ -84,7 +84,7 @@ namespace SimVent.UI
         private void OnToggleHeaterClicked()
         {
             // Если ТЭН в аварии, то первое нажатие просто сбрасывает аварию, но не включает нагрев
-            using (var bridgeList = EntityBridge.InCurrentWorld().FindWithComponent<ElectricHeaterComponent>())
+            using (var bridgeList = ClientBridge.World().FindWithComponent<ElectricHeaterComponent>())
             {
                 for (int i = 0; i < bridgeList.Count; i++)
                 {
@@ -117,7 +117,7 @@ namespace SimVent.UI
 
         private void Update()
         {
-            var bridgeWorld = EntityBridge.InCurrentWorld();
+            var bridgeWorld = ClientBridge.World();
 
             // 1. Читаем DPS (Расход воздуха)
             using (var dpsList = bridgeWorld.FindWithComponent<DpsSensorComponent>())

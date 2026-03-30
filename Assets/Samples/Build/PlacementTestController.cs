@@ -33,7 +33,7 @@ public class PlacementTestController : MonoBehaviour
             // 1. ВАЖНО: Мы берем именно Клиентский мир! 
             // InCurrentWorld может вернуть Серверный мир, если мы играем за Хоста, 
             // но для UI всегда правильнее и безопаснее читать из мира Клиента (призраков).
-            var clientBridge = EntityBridge.InClientWorld();
+            var clientBridge = ClientBridge.World();
             
             if (clientBridge == null)
             {
@@ -73,24 +73,24 @@ public class PlacementTestController : MonoBehaviour
         }
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
-            EntityBridge.InCurrentWorld().BeginSpawn(_prefabNameToSpawn).Spawn().BeginPlacement(_step);
-            EntityBridge.InCurrentWorld().ToggleCurrentGridSnap();
+            ClientBridge.World().BeginSpawn(_prefabNameToSpawn).Spawn().BeginPlacement(_step);
+            ClientBridge.World().ToggleCurrentGridSnap();
             Debug.Log("[SimBridge Editor] Выбран компонент. ЛКМ - разместить, G - вкл/выкл сетку.");
         }
         if (Input.GetMouseButtonDown(1))
         {
-            EntityBridge.InCurrentWorld().GetEntityUnderMouse<HingeTrigger>().TriggerHinge();
-            EntityBridge.InCurrentWorld().GetEntityUnderMouse<PushButtonTrigger>().TriggerButton();
+            ClientBridge.World().GetEntityUnderMouse<HingeTrigger>().TriggerHinge();
+            ClientBridge.World().GetEntityUnderMouse<PushButtonTrigger>().TriggerButton();
         }
         
         if (Input.GetKeyDown(KeyCode.G))
         {
-            bool isSnapActive = EntityBridge.InCurrentWorld().ToggleCurrentGridSnap();
+            bool isSnapActive = ClientBridge.World().ToggleCurrentGridSnap();
             Debug.Log($"[SimBridge Editor] Привязка к сетке: {(isSnapActive ? "ВКЛ" : "ВЫКЛ")}");
         }
 
         // --- 3. UI-ИНДИКАЦИЯ ---
-        if (EntityBridge.InCurrentWorld().HasActiveGhost())
+        if (ClientBridge.World().HasActiveGhost())
         {
             bool isValid = EntityBridge.IsCurrentPlacementValid();
             if (isValid != _wasValid)
@@ -101,13 +101,13 @@ public class PlacementTestController : MonoBehaviour
 
         if (Input.GetMouseButtonDown(0))
         {
-            if (EntityBridge.InCurrentWorld().HasActiveGhost())
+            if (ClientBridge.World().HasActiveGhost())
             {
                 EntityBridge.CompleteCurrentPlacement();
             }
             else 
             {
-                EntityBridge.InCurrentWorld().GetEntityUnderMouse<PlaceableTag>().BeginPlacement(_step);
+                ClientBridge.World().GetEntityUnderMouse<PlaceableTag>().BeginPlacement(_step);
             }
         }
     }

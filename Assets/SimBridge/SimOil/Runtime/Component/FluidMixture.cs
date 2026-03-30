@@ -3,14 +3,12 @@ using Unity.NetCode;
 
 namespace SimOil
 {
-    [GhostComponent]
     public struct FluidMixture : IComponentData
     {
-        [GhostField] public float TotalMass;       // кг
-        [GhostField] public float Temperature;     // °C
-        [GhostField] public float Pressure;        // МПа
+        public float TotalMass;       // кг
+        public float Temperature;     // °C
+        public float Pressure;        // МПа
 
-        // Фракции (Сумма всегда должна быть = 1.0)
         public float FractionGas;            // С1-С4
         public float FractionLightNaphtha;   // Н.К. – 85°C
         public float FractionHeavyNaphtha;   // 85 – 180°C
@@ -20,7 +18,15 @@ namespace SimOil
         public float FractionMazut;          // > 350°C
         public float FractionWater;          // Вода / Пар
     }
+    
     [GhostComponent]
+    public partial struct NetSync_FluidNode : IComponentData
+    {
+        [GhostField] public float TotalMass;
+        [GhostField] public float Pressure;
+        [GhostField] public float Temperature;
+    }
+    
     // Компонент связи двух логических узлов
     public struct FluidLink : IComponentData
     {
@@ -28,8 +34,8 @@ namespace SimOil
         public Entity NodeB;
         
         // Физические параметры трубы
-        [GhostField] public float CrossSectionArea; // Площадь сечения (м²)
-        [GhostField] public float FrictionFactor;   // Коэффициент трения (замедляет поток)
+        public float CrossSectionArea; // Площадь сечения (м²)
+        public float FrictionFactor;   // Коэффициент трения (замедляет поток)
         
         // Динамический параметр (рассчитывается системой)
         // Если > 0, течет от A к B. Если < 0, течет от B к A.

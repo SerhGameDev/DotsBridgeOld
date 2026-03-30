@@ -50,7 +50,7 @@ namespace DotsBridge
         /// </summary>
         public static PlacementStatus CompleteCurrentPlacement()
         {
-            var bridge = InCurrentWorld();
+            var bridge = ClientBridge.World();
             if (bridge == null) return PlacementStatus.NoGhostFound;
 
             var ghostBatch = bridge.GetFromContainer<GhostTag>();
@@ -109,7 +109,7 @@ namespace DotsBridge
         /// </summary>
         public static void CancelCurrentPlacement()
         {
-            var bridge = InCurrentWorld();
+            var bridge = ClientBridge.World();
             if (bridge == null) return;
 
             using var ghostBatch = bridge.GetFromContainer<GhostTag>();
@@ -118,7 +118,7 @@ namespace DotsBridge
 
         public static bool IsCurrentPlacementValid()
         {
-            var bridge = InCurrentWorld();
+            var bridge = ClientBridge.World();
             if (bridge == null) return false;
 
             using var ghostBatch = bridge.GetFromContainer<GhostTag>();

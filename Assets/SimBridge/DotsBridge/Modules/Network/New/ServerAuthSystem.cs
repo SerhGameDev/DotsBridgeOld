@@ -1,4 +1,5 @@
-﻿using Unity.Collections;
+﻿using DotsBridge.Core;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.NetCode;
 using UnityEngine;
@@ -11,19 +12,16 @@ namespace DotsBridge.Modules.Network
         protected override void OnUpdate()
         {
             var commandBuffer = new EntityCommandBuffer(Allocator.Temp);
-            var bootstrapper = DotsBridgeBootstrapper.Instance;
+            var bootstrapper = MonoBehaviourBridge.Instance;
 
-            // Если синглтон настроек еще не проснулся, просто ждем
             if (bootstrapper == null) return;
 
-            // Ищем все входящие запросы на авторизацию
             foreach (var (request, receiveInfo, entity) in SystemAPI.Query<RefRO<AuthRequestRpc>, RefRO<ReceiveRpcCommandRequest>>().WithEntityAccess())
             {
                 var connectionEntity = receiveInfo.ValueRO.SourceConnection;
                 var nickname = request.ValueRO.Nickname.ToString();
                 var password = request.ValueRO.Password.ToString();
                 
-                // Получаем ID сокета
                 int networkId = -1;
                 if (SystemAPI.HasComponent<NetworkId>(connectionEntity))
                 {
@@ -35,23 +33,21 @@ namespace DotsBridge.Modules.Network
                 AuthStatus finalStatus = AuthStatus.Success;
                 string rejectReason = "";
 
-                // --- 1. ПРОВЕРКА ПАРОЛЯ ---
-                if (!string.IsNullOrEmpty(bootstrapper.ServerPassword) && password != bootstrapper.ServerPassword)
+                // --- 1. ПРОВЕРКА ПАРОЛЯ (теперь через .Security) ---
+                if (!string.IsNullOrEmpty(bootstrapper.Security.ServerPassword) && password != bootstrapper.Security.ServerPassword)
                 {
                     finalStatus = AuthStatus.WrongPassword;
                     rejectReason = "Неверный пароль сервера.";
                 }
-                // --- 2. ПРОВЕРКА ЛИМИТА ИГРОКОВ ---
-                else if (ConnectionManager.Players.Count >= bootstrapper.MaxPlayers)
+                // --- 2. ПРОВЕРКА ЛИМИТА ИГРОКОВ (теперь через .Security) ---
+                else if (ConnectionManager.Players.Count >= bootstrapper.Security.MaxPlayers)
                 {
                     finalStatus = AuthStatus.ServerFull;
                     rejectReason = "Сервер переполнен.";
                 }
-                // --- 3. ПРОВЕРКА АВТО-ВХОДА ---
-                else if (!bootstrapper.AutoAcceptConnections)
+                // --- 3. ПРОВЕРКА АВТО-ВХОДА (теперь через .Security) ---
+                else if (!bootstrapper.Security.AutoAcceptConnections)
                 {
-                    // Если галочка снята, мы пока просто отклоняем вход и кидаем ивент.
-                    // (В будущем здесь можно сделать добавление в очередь ожидания)
                     finalStatus = AuthStatus.Rejected;
                     rejectReason = "Требуется ручное подтверждение хостом.";
                     
@@ -59,7 +55,7 @@ namespace DotsBridge.Modules.Network
                     ConnectionManager.InvokePlayerRequestJoin(authData);
                 }
 
-                // --- 4. ОТПРАВКА ОТВЕТА КЛИЕНТУ ---
+                // --- 4. ОТПРАВКА ОТВЕТА ---
                 var responseRpc = commandBuffer.CreateEntity();
                 commandBuffer.AddComponent(responseRpc, new AuthResponseRpc
                 {
@@ -68,12 +64,10 @@ namespace DotsBridge.Modules.Network
                 });
                 commandBuffer.AddComponent(responseRpc, new SendRpcCommandRequest { TargetConnection = connectionEntity });
 
-                // --- 5. РЕГИСТРАЦИЯ ИГРОКА (ЕСЛИ УСПЕХ) ---
+                // --- 5. РЕГИСТРАЦИЯ ИГРОКА ---
                 if (finalStatus == AuthStatus.Success)
                 {
                     commandBuffer.AddComponent<NetworkStreamInGame>(connectionEntity);
-                    
-                    // ДОБАВЛЯЕМ СЮДА НАШ CLEANUP ДЛЯ СЕРВЕРА:
                     commandBuffer.AddComponent(connectionEntity, new SessionCleanup { NetworkId = networkId });
 
                     var session = new PlayerSession
@@ -84,21 +78,16 @@ namespace DotsBridge.Modules.Network
                     };
 
                     ConnectionManager.Players[networkId] = session;
-                    ConnectionManager.InvokePlayerJoined(session); // Триггерим UI сервера
+                    ConnectionManager.InvokePlayerJoined(session);
                     
-                    
-                    Debug.Log($"[ServerAuthSystem] Игрок {nickname} (ID: {networkId}) успешно добавлен. Всего игроков: {ConnectionManager.Players.Count}");
+                    Debug.Log($"[ServerAuthSystem] Игрок {nickname} успешно добавлен.");
                 }
                 else
                 {
                     Debug.LogWarning($"[ServerAuthSystem] Отказ игроку {nickname}. Причина: {finalStatus}");
-                    
-                    // Если отказали, сервер сам вешает запрос на разрыв связи. 
-                    // Клиент, получив ответ, сделает то же самое. Двойная надежность.
                     commandBuffer.AddComponent<NetworkStreamRequestDisconnect>(connectionEntity);
                 }
 
-                // В DOTS входящие RPC нужно удалять вручную после прочтения!
                 commandBuffer.DestroyEntity(entity);
             }
 

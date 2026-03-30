@@ -3,6 +3,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using SimBridge.Core.Time;
 using Unity.Collections;
+using UnityEngine;
 
 namespace SimOil.Systems
 {
@@ -12,7 +13,7 @@ namespace SimOil.Systems
     public partial struct FluidFlowSystem : ISystem
     {
         private ComponentLookup<FluidMixture> _mixtureLookup;
-        // Добавляем Lookup для насосов, чтобы проверять их наличие на связях
+
         private ComponentLookup<PumpData> _pumpLookup; 
 
         [BurstCompile]

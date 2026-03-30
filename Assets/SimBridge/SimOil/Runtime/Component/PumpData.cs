@@ -1,7 +1,9 @@
 ﻿using Unity.Entities;
+using Unity.NetCode;
 
 namespace SimOil
 {
+    [GhostComponent(PrefabType = GhostPrefabType.Server)]
     public struct PumpData : IComponentData
     {
         // Максимальная добавка к давлению (напор насоса), которую он может создать (в МПа)

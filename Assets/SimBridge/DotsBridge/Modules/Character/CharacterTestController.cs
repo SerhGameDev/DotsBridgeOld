@@ -24,7 +24,7 @@ namespace DotsBridge.Test
                 // Если кем-то уже управляем - отпускаем
                 ReleaseCurrentCharacter();
 
-                using var spawnedBatch = EntityBridge.InCurrentWorld()
+                using var spawnedBatch = ClientBridge.World()
                     .BeginSpawn(_characterPrefabName)
                     .SetPosition(new Vector3(0,10,0) )
                     .SetId(_existingCharacterId)
@@ -33,7 +33,7 @@ namespace DotsBridge.Test
 
                 if (spawnedBatch.Count > 0)
                 {
-                    _currentCharacter = new SingleEntity(spawnedBatch.Entities[0], EntityBridge.InCurrentWorld());
+                    _currentCharacter = new SingleEntity(spawnedBatch.Entities[0], ClientBridge.World());
                     _currentCharacter.Possess().AttachFirstPersonCamera(); 
                 }
                 _inputSync.ControlledEntity = _currentCharacter;
@@ -44,11 +44,11 @@ namespace DotsBridge.Test
             {
                 ReleaseCurrentCharacter();
 
-                using var foundBatch = EntityBridge.InCurrentWorld().FindById(_existingCharacterId);
+                using var foundBatch = ClientBridge.World().FindById(_existingCharacterId);
                 
                 if (foundBatch.Count > 0)
                 {
-                    _currentCharacter = new SingleEntity(foundBatch.Entities[0], EntityBridge.InCurrentWorld());
+                    _currentCharacter = new SingleEntity(foundBatch.Entities[0], ClientBridge.World());
                     _currentCharacter.Possess();
                 }
                 else

@@ -13,7 +13,7 @@ namespace DotsBridge.Systems
 
         protected override void OnUpdate()
         {
-            var registry = EntityBridge.InCurrentWorld();
+            var registry = ClientBridge.World();
             if (registry == null) return;
 
             var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>()

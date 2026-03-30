@@ -9,7 +9,7 @@ public class RoomUI : MonoBehaviour
     public TextMeshProUGUI _roomTemperatureText;
     private void Update()
     {
-        using (var roomList = EntityBridge.InCurrentWorld().FindWithComponent<NodeTemperatureSensorComponent>())
+        using (var roomList = ClientBridge.World().FindWithComponent<NodeTemperatureSensorComponent>())
         {
             if (roomList.Count > 0)
             {

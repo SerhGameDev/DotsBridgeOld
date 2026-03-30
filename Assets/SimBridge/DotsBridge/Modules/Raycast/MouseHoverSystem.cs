@@ -60,7 +60,7 @@ namespace DotsBridge.Systems
             // Логика Enter / Exit срабатывает и при отпускании ALT (currentHitEntity станет Entity.Null)
             if (currentHitEntity != _lastHoveredEntity)
             {
-                var bridge = EntityBridge.GetOrCreateBridge(World);
+                var bridge = ClientBridge.World();
 
                 // --- MOUSE EXIT ---
                 if (_lastHoveredEntity != Entity.Null && EntityManager.Exists(_lastHoveredEntity))

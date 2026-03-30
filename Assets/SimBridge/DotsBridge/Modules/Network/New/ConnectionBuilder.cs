@@ -1,4 +1,6 @@
-﻿namespace DotsBridge.Modules.Network
+﻿using DotsBridge.Core;
+
+namespace DotsBridge.Modules.Network
 {
     public class ConnectionBuilder
     {
@@ -15,8 +17,7 @@
         // Метод для финального запуска подключения
         public void Connect()
         {
-            // Передаем себя в наш Bootstrapper для физического коннекта
-            DotsBridgeBootstrapper.Instance.StartClientFromBuilder(this);
+            MonoBehaviourBridge.Instance.StartClientFromUI(IP, Port, Nickname, Password);
         }
     }
 }
