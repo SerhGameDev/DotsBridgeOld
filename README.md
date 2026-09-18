@@ -52,15 +52,3 @@
 - 🔹 **`ListEntity`** — объектно-ориентированный фасад для массовых, пакетных (batch) операций над группами сущностей за одно структурное изменение памяти (Structural Change).
 
 Дополнительно интегрирована подсистема **IdMapSystem**, которая индексирует объекты в `NativeParallelMultiHashMap`, обеспечивая мгновенный поиск технологических узлов по строковым ID за константное время $O(1)$.
-
-#### 🔄 Жизненный цикл сущности в DotsBridge
-```mermaid
-graph LR
-    A[SpawnerBuilder] -->|Спавн| B[ECS Архетипы]
-    B -->|Симуляция в Chunks| C[Параллельная обработка]
-    C -->|DeathEvent| D[Исключение из расчетов]
-    D -->|OnDestroyEvents| E[Очистка и UI-коллбэки]
-    
-    style A fill:#f9f,stroke:#333,stroke-width:2px
-    style B fill:#bbf,stroke:#333,stroke-width:2px
-    style E fill:#bfb,stroke:#333,stroke-width:2px
